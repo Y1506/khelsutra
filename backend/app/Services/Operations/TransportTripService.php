@@ -10,6 +10,13 @@ use Exception;
 
 class TransportTripService
 {
+    /**
+     * Create a new transport trip with validation.
+     *
+     * @param int $orgId The organization ID
+     * @param array $data Trip data including vehicle_id, driver_employee_id, trip_date
+     * @return TransportTrip The created trip
+     */
     public function createTrip(int $orgId, array $data): TransportTrip
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -62,6 +69,14 @@ class TransportTripService
         });
     }
 
+    /**
+     * Add a passenger to a transport trip with capacity and duplicate checks.
+     *
+     * @param int $orgId The organization ID
+     * @param int $tripId The trip ID
+     * @param array $data Passenger data including athlete_id, employee_id, or coach_id
+     * @return TransportPassenger The created passenger record
+     */
     public function addPassenger(int $orgId, int $tripId, array $data): TransportPassenger
     {
         return DB::transaction(function () use ($orgId, $tripId, $data) {
@@ -114,6 +129,14 @@ class TransportTripService
         });
     }
 
+    /**
+     * Update a transport trip and record expense if completed.
+     *
+     * @param int $orgId The organization ID
+     * @param int $tripId The trip ID
+     * @param array $data Updated trip data
+     * @return TransportTrip The updated trip
+     */
     public function updateTrip(int $orgId, int $tripId, array $data): TransportTrip
     {
         return DB::transaction(function () use ($orgId, $tripId, $data) {

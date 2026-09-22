@@ -10,11 +10,21 @@ class MaintenanceController
 {
     protected MaintenanceService $service;
 
+    /**
+     * Create a new MaintenanceController instance.
+     */
     public function __construct()
     {
         $this->service = new MaintenanceService();
     }
 
+    /**
+     * Get all maintenance tickets for an organization.
+     *
+     * @param int $orgId The organization ID
+     * @param array $requestData Request parameters
+     * @return array API response with maintenance tickets data
+     */
     public function index(int $orgId, array $requestData): array
     {
         $query = VenueMaintenance::where('organization_id', $orgId);
@@ -22,6 +32,13 @@ class MaintenanceController
         return ApiResponse::success(['data' => $tickets->toArray()]);
     }
 
+    /**
+     * Create a new maintenance ticket.
+     *
+     * @param int $orgId The organization ID
+     * @param array $requestData Ticket data
+     * @return array API response with created ticket or error
+     */
     public function store(int $orgId, array $requestData): array
     {
         try {
@@ -32,6 +49,14 @@ class MaintenanceController
         }
     }
 
+    /**
+     * Update a maintenance ticket.
+     *
+     * @param int $orgId The organization ID
+     * @param int $id The ticket ID
+     * @param array $requestData Updated ticket data
+     * @return array API response with updated ticket or error
+     */
     public function update(int $orgId, int $id, array $requestData): array
     {
         try {

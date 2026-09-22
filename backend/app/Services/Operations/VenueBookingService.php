@@ -11,11 +11,22 @@ class VenueBookingService
 {
     protected VenueAvailabilityService $availability;
 
+    /**
+     * Create a new VenueBookingService instance.
+     */
     public function __construct()
     {
         $this->availability = new VenueAvailabilityService();
     }
 
+    /**
+     * Create a venue booking with availability validation.
+     *
+     * @param int $orgId The organization ID
+     * @param array $data Booking data including venue_id, booking_date, start_time, end_time
+     * @param bool $hasManagePerm Whether user has manage permission (auto-approves)
+     * @return VenueBooking The created booking
+     */
     public function createBooking(int $orgId, array $data, bool $hasManagePerm): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $data, $hasManagePerm) {
@@ -46,6 +57,15 @@ class VenueBookingService
         });
     }
 
+    /**
+     * Cancel a venue booking.
+     *
+     * @param int $orgId The organization ID
+     * @param int $bookingId The booking ID
+     * @param int $userId The user ID cancelling the booking
+     * @param string $reason The cancellation reason (optional)
+     * @return VenueBooking The cancelled booking
+     */
     public function cancelBooking(int $orgId, int $bookingId, int $userId, string $reason = ''): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $bookingId, $userId, $reason) {
@@ -64,6 +84,14 @@ class VenueBookingService
         });
     }
 
+    /**
+     * Reschedule a venue booking to a new date/time with availability validation.
+     *
+     * @param int $orgId The organization ID
+     * @param int $bookingId The booking ID
+     * @param array $data Updated booking data (booking_date, start_time, end_time, facility_id)
+     * @return VenueBooking The rescheduled booking
+     */
     public function rescheduleBooking(int $orgId, int $bookingId, array $data): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $bookingId, $data) {

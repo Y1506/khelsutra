@@ -6,6 +6,9 @@ class OperationsPermissionHelper
 {
     /**
      * Map operations action to existing permissions.
+     *
+     * @param string $action The action to map
+     * @return array Array of permission strings
      */
     public static function getPermissions(string $action): array
     {
@@ -36,6 +39,13 @@ class OperationsPermissionHelper
         return $map[$action] ?? [];
     }
 
+    /**
+     * Check if user has any of the required permissions for an action.
+     *
+     * @param int $userId The user ID to check
+     * @param string $action The action to check permissions for
+     * @return bool True if user has any required permission
+     */
     public static function hasAny(int $userId, string $action): bool
     {
         $perms = self::getPermissions($action);

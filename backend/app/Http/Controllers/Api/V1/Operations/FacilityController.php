@@ -12,11 +12,22 @@ class FacilityController
 {
     protected FacilityService $facilityService;
 
+    /**
+     * Create a new FacilityController instance.
+     */
     public function __construct()
     {
         $this->facilityService = new FacilityService();
     }
 
+    /**
+     * Get all facilities for a venue.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param array $requestData Request parameters
+     * @return array API response with facilities data or error
+     */
     public function index(int $orgId, int $venueId, array $requestData): array
     {
         $venue = Venue::where('organization_id', $orgId)->find($venueId);
@@ -26,6 +37,14 @@ class FacilityController
         return ApiResponse::success(['data' => $facilities->toArray()]);
     }
 
+    /**
+     * Create a new facility in a venue.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param array $requestData Facility data
+     * @return array API response with created facility or error
+     */
     public function store(int $orgId, int $venueId, array $requestData): array
     {
         $request = new FacilityRequest($requestData);
@@ -43,6 +62,14 @@ class FacilityController
         }
     }
 
+    /**
+     * Get a specific facility.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param int $id The facility ID
+     * @return array API response with facility data or error
+     */
     public function show(int $orgId, int $venueId, int $id): array
     {
         $facility = Facility::where('organization_id', $orgId)
@@ -55,6 +82,15 @@ class FacilityController
         return ApiResponse::success($facility->toArray());
     }
 
+    /**
+     * Update a facility.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param int $id The facility ID
+     * @param array $requestData Updated facility data
+     * @return array API response with updated facility or error
+     */
     public function update(int $orgId, int $venueId, int $id, array $requestData): array
     {
         $request = new FacilityRequest($requestData);
@@ -72,6 +108,14 @@ class FacilityController
         }
     }
 
+    /**
+     * Delete a facility.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param int $id The facility ID
+     * @return array API response confirming deletion or error
+     */
     public function destroy(int $orgId, int $venueId, int $id): array
     {
         try {

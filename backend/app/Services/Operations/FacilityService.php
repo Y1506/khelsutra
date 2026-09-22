@@ -11,7 +11,12 @@ use Exception;
 class FacilityService
 {
     /**
-     * Create a new facility in a venue
+     * Create a new facility in a venue.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param array $data Facility data
+     * @return Facility The created facility
      */
     public function create(int $orgId, int $venueId, array $data): Facility
     {
@@ -29,7 +34,13 @@ class FacilityService
     }
 
     /**
-     * Update a facility
+     * Update a facility.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param int $facilityId The facility ID
+     * @param array $data Updated facility data
+     * @return Facility The updated facility
      */
     public function update(int $orgId, int $venueId, int $facilityId, array $data): Facility
     {
@@ -44,7 +55,12 @@ class FacilityService
     }
 
     /**
-     * Delete a facility (soft delete if no active bookings)
+     * Delete a facility if it has no active bookings.
+     *
+     * @param int $orgId The organization ID
+     * @param int $venueId The venue ID
+     * @param int $facilityId The facility ID
+     * @return void
      */
     public function delete(int $orgId, int $venueId, int $facilityId): void
     {

@@ -10,11 +10,21 @@ class HousekeepingController
 {
     protected HousekeepingService $service;
 
+    /**
+     * Create a new HousekeepingController instance.
+     */
     public function __construct()
     {
         $this->service = new HousekeepingService();
     }
 
+    /**
+     * Get all housekeeping tasks for an organization.
+     *
+     * @param int $orgId The organization ID
+     * @param array $requestData Request parameters
+     * @return array API response with housekeeping tasks data
+     */
     public function index(int $orgId, array $requestData): array
     {
         $query = HousekeepingTask::where('organization_id', $orgId);
@@ -22,6 +32,13 @@ class HousekeepingController
         return ApiResponse::success(['data' => $tasks->toArray()]);
     }
 
+    /**
+     * Create a new housekeeping task.
+     *
+     * @param int $orgId The organization ID
+     * @param array $requestData Task data
+     * @return array API response with created task or error
+     */
     public function store(int $orgId, array $requestData): array
     {
         try {
@@ -32,6 +49,14 @@ class HousekeepingController
         }
     }
 
+    /**
+     * Update a housekeeping task.
+     *
+     * @param int $orgId The organization ID
+     * @param int $id The task ID
+     * @param array $requestData Updated task data
+     * @return array API response with updated task or error
+     */
     public function update(int $orgId, int $id, array $requestData): array
     {
         try {

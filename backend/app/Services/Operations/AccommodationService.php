@@ -9,6 +9,13 @@ use Exception;
 
 class AccommodationService
 {
+    /**
+     * Create a new accommodation.
+     *
+     * @param int $orgId The organization ID
+     * @param array $data Accommodation data
+     * @return Accommodation The created accommodation
+     */
     public function createAccommodation(int $orgId, array $data): Accommodation
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -19,6 +26,14 @@ class AccommodationService
         });
     }
 
+    /**
+     * Create a new room in an accommodation.
+     *
+     * @param int $orgId The organization ID
+     * @param int $accommodationId The accommodation ID
+     * @param array $data Room data
+     * @return AccommodationRoom The created room
+     */
     public function createRoom(int $orgId, int $accommodationId, array $data): AccommodationRoom
     {
         return DB::transaction(function () use ($orgId, $accommodationId, $data) {
@@ -32,6 +47,13 @@ class AccommodationService
         });
     }
 
+    /**
+     * Delete an accommodation if it has no active allocations.
+     *
+     * @param int $orgId The organization ID
+     * @param int $id The accommodation ID
+     * @return bool True if deleted successfully
+     */
     public function deleteAccommodation(int $orgId, int $id): bool
     {
         return DB::transaction(function () use ($orgId, $id) {

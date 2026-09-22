@@ -9,6 +9,13 @@ use Exception;
 
 class RoomAllocationService
 {
+    /**
+     * Allocate a room to a person with validation and capacity checks.
+     *
+     * @param int $orgId The organization ID
+     * @param array $data Allocation data including room_id, check_in_date, check_out_date
+     * @return AccommodationAllocation The created allocation
+     */
     public function allocateRoom(int $orgId, array $data): AccommodationAllocation
     {
         return DB::transaction(function () use ($orgId, $data) {

@@ -7,6 +7,13 @@ use Illuminate\Database\Capsule\Manager as DB;
 
 class MaintenanceService
 {
+    /**
+     * Create a new maintenance ticket with generated reference.
+     *
+     * @param int $orgId The organization ID
+     * @param array $data Ticket data
+     * @return VenueMaintenance The created ticket
+     */
     public function createTicket(int $orgId, array $data): VenueMaintenance
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -19,6 +26,14 @@ class MaintenanceService
         });
     }
 
+    /**
+     * Update a maintenance ticket and record expense if completed.
+     *
+     * @param int $orgId The organization ID
+     * @param int $id The ticket ID
+     * @param array $data Updated ticket data
+     * @return VenueMaintenance The updated ticket
+     */
     public function updateTicket(int $orgId, int $id, array $data): VenueMaintenance
     {
         return DB::transaction(function () use ($orgId, $id, $data) {

@@ -11,17 +11,36 @@ class EventController
 {
     protected EventService $service;
 
+    /**
+     * Create a new EventController instance.
+     *
+     * @param EventService $service The event service
+     */
     public function __construct(EventService $service)
     {
         $this->service = $service;
     }
 
+    /**
+     * Get all events for an organization.
+     *
+     * @param int $orgId The organization ID
+     * @param array $requestData Request parameters
+     * @return array API response with events data
+     */
     public function index(int $orgId, array $requestData): array
     {
         $events = Event::where('organization_id', $orgId)->get();
         return ApiResponse::success(['data' => $events->toArray()]);
     }
 
+    /**
+     * Create a new event.
+     *
+     * @param int $orgId The organization ID
+     * @param array $requestData Event data
+     * @return array API response with created event or error
+     */
     public function store(int $orgId, array $requestData): array
     {
         try {
@@ -32,6 +51,14 @@ class EventController
         }
     }
 
+    /**
+     * Add a participant to an event.
+     *
+     * @param int $orgId The organization ID
+     * @param int $id The event ID
+     * @param array $requestData Participant data
+     * @return array API response with added participant or error
+     */
     public function addParticipant(int $orgId, int $id, array $requestData): array
     {
         try {
@@ -43,6 +70,14 @@ class EventController
         }
     }
 
+    /**
+     * Record an expense for an event.
+     *
+     * @param int $orgId The organization ID
+     * @param int $id The event ID
+     * @param array $requestData Expense data including amount, description, vendor_id
+     * @return array API response with expense ID or error
+     */
     public function recordExpense(int $orgId, int $id, array $requestData): array
     {
         try {
