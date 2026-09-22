@@ -16,12 +16,26 @@ class TransportTripController
         $this->service = $service;
     }
 
+    /**
+     * List all transport trips for an organization.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData Request parameters
+     * @return array API response with trips list
+     */
     public function index(int $orgId, array $requestData): array
     {
         $trips = TransportTrip::where('organization_id', $orgId)->get();
         return ApiResponse::success(['data' => $trips->toArray()]);
     }
 
+    /**
+     * Create a new transport trip.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData Trip creation data
+     * @return array API response with created trip or error
+     */
     public function store(int $orgId, array $requestData): array
     {
         try {
@@ -33,6 +47,14 @@ class TransportTripController
         }
     }
 
+    /**
+     * Add a passenger to a transport trip.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Transport trip ID
+     * @param array $requestData Passenger data
+     * @return array API response with passenger or error
+     */
     public function addPassenger(int $orgId, int $id, array $requestData): array
     {
         try {
@@ -44,6 +66,14 @@ class TransportTripController
         }
     }
 
+    /**
+     * Update an existing transport trip.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Transport trip ID
+     * @param array $requestData Updated trip data
+     * @return array API response with updated trip or error
+     */
     public function update(int $orgId, int $id, array $requestData): array
     {
         try {

@@ -10,6 +10,14 @@ use Exception;
 
 class TransportTripService
 {
+    /**
+     * Create a new transport trip with validation.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Trip data including vehicle_id, driver_employee_id, trip_date, etc.
+     * @return TransportTrip
+     * @throws Exception If vehicle is unavailable, expired, or already booked
+     */
     public function createTrip(int $orgId, array $data): TransportTrip
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -62,6 +70,15 @@ class TransportTripService
         });
     }
 
+    /**
+     * Add a passenger to an existing transport trip.
+     *
+     * @param int $orgId Organization ID
+     * @param int $tripId Transport trip ID
+     * @param array $data Passenger data (athlete_id, employee_id, or coach_id)
+     * @return TransportPassenger
+     * @throws Exception If trip is not active, capacity exceeded, or duplicate passenger
+     */
     public function addPassenger(int $orgId, int $tripId, array $data): TransportPassenger
     {
         return DB::transaction(function () use ($orgId, $tripId, $data) {
@@ -114,6 +131,15 @@ class TransportTripService
         });
     }
 
+    /**
+     * Update an existing transport trip and record expenses if completed.
+     *
+     * @param int $orgId Organization ID
+     * @param int $tripId Transport trip ID
+     * @param array $data Updated trip data
+     * @return TransportTrip
+     * @throws Exception If trip not found
+     */
     public function updateTrip(int $orgId, int $tripId, array $data): TransportTrip
     {
         return DB::transaction(function () use ($orgId, $tripId, $data) {

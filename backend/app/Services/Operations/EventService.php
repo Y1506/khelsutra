@@ -10,6 +10,13 @@ use Exception;
 
 class EventService
 {
+    /**
+     * Create a new event with auto-generated reference.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Event data
+     * @return Event Created event
+     */
     public function createEvent(int $orgId, array $data): Event
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -21,6 +28,15 @@ class EventService
         });
     }
 
+    /**
+     * Add a participant to an event.
+     *
+     * @param int $orgId Organization ID
+     * @param int $eventId Event ID
+     * @param array $data Participant data (participant_type, participant_id)
+     * @return EventParticipant Created participant record
+     * @throws Exception If participant type invalid or already exists
+     */
     public function addParticipant(int $orgId, int $eventId, array $data): EventParticipant
     {
         return DB::transaction(function () use ($orgId, $eventId, $data) {
@@ -62,6 +78,13 @@ class EventService
         });
     }
 
+    /**
+     * Create a school activity.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data School activity data
+     * @return SchoolActivity Created school activity
+     */
     public function createSchoolActivity(int $orgId, array $data): SchoolActivity
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -70,6 +93,16 @@ class EventService
         });
     }
 
+    /**
+     * Record an expense for an event.
+     *
+     * @param int $orgId Organization ID
+     * @param int $eventId Event ID
+     * @param float $amount Expense amount
+     * @param string $description Expense description
+     * @param int|null $vendorId Vendor ID (optional)
+     * @return int Created expense ID
+     */
     public function recordEventExpense(int $orgId, int $eventId, float $amount, string $description, ?int $vendorId = null): int
     {
         return DB::transaction(function () use ($orgId, $eventId, $amount, $description, $vendorId) {

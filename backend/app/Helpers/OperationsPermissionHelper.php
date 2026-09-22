@@ -36,6 +36,13 @@ class OperationsPermissionHelper
         return $map[$action] ?? [];
     }
 
+    /**
+     * Check if user has any of the required permissions for an action.
+     *
+     * @param int $userId User ID
+     * @param string $action Action name to check
+     * @return bool Whether user has permission
+     */
     public static function hasAny(int $userId, string $action): bool
     {
         $perms = self::getPermissions($action);

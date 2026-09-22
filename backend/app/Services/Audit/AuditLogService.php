@@ -11,6 +11,20 @@ class AuditLogService extends BaseService
         'password', 'password_confirmation', 'token', 'remember_token', 'secret', 'api_key'
     ];
 
+    /**
+     * Log an audit trail event.
+     *
+     * @param int|null $orgId Organization ID
+     * @param int|null $userId User ID performing the action
+     * @param string $action Action type (e.g., LOGIN, CREATE, UPDATE, DELETE)
+     * @param string $module Module name
+     * @param string|null $tableName Database table affected
+     * @param int|null $recordId Record ID affected
+     * @param array|null $oldValues Previous values before change
+     * @param array|null $newValues New values after change
+     * @param string|null $description Human-readable description
+     * @return bool Whether log was successfully created
+     */
     public function log(
         ?int $orgId,
         ?int $userId,
@@ -54,6 +68,14 @@ class AuditLogService extends BaseService
         ]);
     }
 
+    /**
+     * Get audit log entries with pagination.
+     *
+     * @param int|null $orgId Organization ID to filter by (null for all)
+     * @param int $limit Maximum records to return
+     * @param int $offset Number of records to skip
+     * @return array Audit log entries
+     */
     public function getLogs(?int $orgId = null, int $limit = 50, int $offset = 0): array
     {
         if (!$this->pdo) return [];
@@ -81,6 +103,12 @@ class AuditLogService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Sanitize sensitive data from audit log values.
+     *
+     * @param array $data Data to sanitize
+     * @return array Sanitized data with sensitive keys redacted
+     */
     public static function sanitize(array $data): array
     {
         $sanitized = [];

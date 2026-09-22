@@ -15,6 +15,13 @@ class AuditLogController extends Controller
         $this->auditService = $auditService ?? new AuditLogService();
     }
 
+    /**
+     * Get audit log entries.
+     *
+     * @param int|null $orgId Organization ID (null for all organizations)
+     * @param array $requestData Request parameters (limit, offset)
+     * @return array API response with audit logs
+     */
     public function index(?int $orgId, array $requestData): array
     {
         $limit = (int)($requestData['limit'] ?? 50);

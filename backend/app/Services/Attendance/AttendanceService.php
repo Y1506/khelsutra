@@ -16,6 +16,16 @@ class AttendanceService extends BaseService
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Record training attendance for a participant.
+     *
+     * @param int $orgId Organization ID
+     * @param int $sessionId Training session ID
+     * @param array $data Attendance data (athlete_id, coach_id, or employee_id, attendance_status, times, remarks)
+     * @param int|null $performedBy User ID who performed the action
+     * @return array|null Recorded attendance data or null if PDO unavailable
+     * @throws \InvalidArgumentException If validation fails
+     */
     public function recordTrainingAttendance(int $orgId, int $sessionId, array $data, ?int $performedBy = null): ?array
     {
         if (!$this->pdo) return null;
@@ -90,6 +100,16 @@ class AttendanceService extends BaseService
         ];
     }
 
+    /**
+     * Record match attendance for a participant.
+     *
+     * @param int $orgId Organization ID
+     * @param int $matchId Match ID
+     * @param array $data Attendance data (athlete_id, coach_id, or employee_id, attendance_status, remarks)
+     * @param int|null $performedBy User ID who performed the action
+     * @return array|null Recorded attendance data or null if PDO unavailable
+     * @throws \InvalidArgumentException If validation fails
+     */
     public function recordMatchAttendance(int $orgId, int $matchId, array $data, ?int $performedBy = null): ?array
     {
         if (!$this->pdo) return null;
@@ -154,6 +174,14 @@ class AttendanceService extends BaseService
         ];
     }
 
+    /**
+     * Get training attendance history with optional filtering.
+     *
+     * @param int $orgId Organization ID
+     * @param int|null $sessionId Optional training session ID to filter by
+     * @param int $limit Maximum records to return
+     * @return array Attendance history records
+     */
     public function getTrainingAttendanceHistory(int $orgId, ?int $sessionId = null, int $limit = 50): array
     {
         if (!$this->pdo) return [];
@@ -186,6 +214,14 @@ class AttendanceService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Mark training attendance (convenience wrapper).
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Attendance data including training_session_id
+     * @param int|null $performedBy User ID who performed the action
+     * @return array|null Recorded attendance with ID
+     */
     public function markTrainingAttendance(int $orgId, array $data, ?int $performedBy = null): ?array
     {
         $sessionId = (int)($data['training_session_id'] ?? 1);
@@ -196,6 +232,14 @@ class AttendanceService extends BaseService
         return $res;
     }
 
+    /**
+     * Mark match attendance (convenience wrapper).
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Attendance data including match_id
+     * @param int|null $performedBy User ID who performed the action
+     * @return array|null Recorded attendance with ID
+     */
     public function markMatchAttendance(int $orgId, array $data, ?int $performedBy = null): ?array
     {
         $matchId = (int)($data['match_id'] ?? 1);
@@ -206,12 +250,26 @@ class AttendanceService extends BaseService
         return $res;
     }
 
+    /**
+     * List training attendance records with filters.
+     *
+     * @param int $orgId Organization ID
+     * @param array $filters Filter parameters (training_session_id)
+     * @return array Attendance records
+     */
     public function listTrainingAttendance(int $orgId, array $filters = []): array
     {
         $sessionId = !empty($filters['training_session_id']) ? (int)$filters['training_session_id'] : null;
         return $this->getTrainingAttendanceHistory($orgId, $sessionId);
     }
 
+    /**
+     * List match attendance records with filters.
+     *
+     * @param int $orgId Organization ID
+     * @param array $filters Filter parameters
+     * @return array Attendance records
+     */
     public function listMatchAttendance(int $orgId, array $filters = []): array
     {
         if (!$this->pdo) return [];

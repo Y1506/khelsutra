@@ -19,6 +19,13 @@ class VenueBookingController
         $this->availabilityService = new VenueAvailabilityService();
     }
 
+    /**
+     * List venue bookings with optional filters.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData Filter parameters (venue_id, booking_date)
+     * @return array API response with bookings list
+     */
     public function index(int $orgId, array $requestData): array
     {
         $query = VenueBooking::where('organization_id', $orgId);
@@ -34,6 +41,14 @@ class VenueBookingController
         return ApiResponse::success(['data' => $bookings->toArray()]);
     }
 
+    /**
+     * Check venue availability for a specific date and time range.
+     *
+     * @param int $orgId Organization ID
+     * @param int $venueId Venue ID
+     * @param array $requestData Request data (date, facility_id, start_time, end_time)
+     * @return array API response with availability status
+     */
     public function availability(int $orgId, int $venueId, array $requestData): array
     {
         if (empty($requestData['date'])) {
@@ -52,6 +67,14 @@ class VenueBookingController
         return ApiResponse::success($check);
     }
 
+    /**
+     * Check facility availability for a specific date and time range.
+     *
+     * @param int $orgId Organization ID
+     * @param int $facilityId Facility ID
+     * @param array $requestData Request data (date, start_time, end_time)
+     * @return array API response with availability status
+     */
     public function facilityAvailability(int $orgId, int $facilityId, array $requestData): array
     {
         if (empty($requestData['date'])) {
@@ -73,6 +96,13 @@ class VenueBookingController
         return ApiResponse::success($check);
     }
 
+    /**
+     * Create a new venue booking.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData Booking data
+     * @return array API response with created booking or error
+     */
     public function store(int $orgId, array $requestData): array
     {
         $request = new VenueBookingRequest($requestData);
@@ -94,6 +124,14 @@ class VenueBookingController
         }
     }
 
+    /**
+     * Cancel a venue booking.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Booking ID
+     * @param array $requestData Cancellation data (user_id, reason)
+     * @return array API response with cancelled booking or error
+     */
     public function cancel(int $orgId, int $id, array $requestData): array
     {
         try {

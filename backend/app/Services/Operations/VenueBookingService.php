@@ -16,6 +16,15 @@ class VenueBookingService
         $this->availability = new VenueAvailabilityService();
     }
 
+    /**
+     * Create a new venue booking with availability validation.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Booking data (venue_id, facility_id, booking_date, start_time, end_time, purpose)
+     * @param bool $hasManagePerm Whether user has manage permission (auto-approve)
+     * @return VenueBooking Created booking
+     * @throws Exception If venue unavailable or conflict exists
+     */
     public function createBooking(int $orgId, array $data, bool $hasManagePerm): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $data, $hasManagePerm) {
@@ -46,6 +55,16 @@ class VenueBookingService
         });
     }
 
+    /**
+     * Cancel an existing venue booking.
+     *
+     * @param int $orgId Organization ID
+     * @param int $bookingId Booking ID
+     * @param int $userId User ID performing the cancellation
+     * @param string $reason Cancellation reason
+     * @return VenueBooking Updated booking
+     * @throws Exception If booking cannot be cancelled
+     */
     public function cancelBooking(int $orgId, int $bookingId, int $userId, string $reason = ''): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $bookingId, $userId, $reason) {
@@ -64,6 +83,15 @@ class VenueBookingService
         });
     }
 
+    /**
+     * Reschedule an existing venue booking to a new date/time.
+     *
+     * @param int $orgId Organization ID
+     * @param int $bookingId Booking ID
+     * @param array $data Updated booking data (booking_date, start_time, end_time, facility_id)
+     * @return VenueBooking Updated booking
+     * @throws Exception If rescheduling fails or new slot unavailable
+     */
     public function rescheduleBooking(int $orgId, int $bookingId, array $data): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $bookingId, $data) {

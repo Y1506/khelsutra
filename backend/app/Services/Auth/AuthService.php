@@ -16,6 +16,14 @@ class AuthService extends BaseService
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Authenticate user and create session with HMAC-signed token.
+     *
+     * @param string $email User email
+     * @param string $password User password
+     * @param string|null $orgCode Organization code (optional)
+     * @return array|null Session data with user, organization, role, permissions, and token, or null if authentication fails
+     */
     public function login(string $email, string $password, ?string $orgCode = null): ?array
     {
         if (!$this->pdo) {
@@ -186,6 +194,13 @@ class AuthService extends BaseService
         ];
     }
 
+    /**
+     * Log out user and record audit trail.
+     *
+     * @param int|null $userId User ID
+     * @param int|null $orgId Organization ID
+     * @return bool Always returns true
+     */
     public function logout(?int $userId = null, ?int $orgId = null): bool
     {
         if ($userId) {
@@ -194,6 +209,12 @@ class AuthService extends BaseService
         return true;
     }
 
+    /**
+     * Resolve user data from HMAC-signed authentication token.
+     *
+     * @param string $token Authentication token
+     * @return array|null User data with organization, role, and permissions, or null if token is invalid or expired
+     */
     public function resolveUserByToken(string $token): ?array
     {
         if (empty($token) || !str_contains($token, '.')) return null;

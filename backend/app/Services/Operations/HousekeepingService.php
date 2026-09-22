@@ -7,6 +7,13 @@ use Illuminate\Database\Capsule\Manager as DB;
 
 class HousekeepingService
 {
+    /**
+     * Create a housekeeping task with auto-generated reference.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Task data
+     * @return HousekeepingTask Created task
+     */
     public function createTask(int $orgId, array $data): HousekeepingTask
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -19,6 +26,14 @@ class HousekeepingService
         });
     }
 
+    /**
+     * Update a housekeeping task.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Task ID
+     * @param array $data Updated task data
+     * @return HousekeepingTask Updated task
+     */
     public function updateTask(int $orgId, int $id, array $data): HousekeepingTask
     {
         return DB::transaction(function () use ($orgId, $id, $data) {

@@ -8,6 +8,13 @@ use Exception;
 
 class VehicleService
 {
+    /**
+     * Create a new vehicle for an organization.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Vehicle data
+     * @return Vehicle Created vehicle
+     */
     public function createVehicle(int $orgId, array $data): Vehicle
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -18,6 +25,14 @@ class VehicleService
         });
     }
 
+    /**
+     * Delete a vehicle if it has no active trips.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Vehicle ID
+     * @return bool Whether deletion was successful
+     * @throws Exception If vehicle has active trips
+     */
     public function deleteVehicle(int $orgId, int $id): bool
     {
         return DB::transaction(function () use ($orgId, $id) {
