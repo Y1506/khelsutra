@@ -10,12 +10,24 @@ class OrganizationSettingsService extends BaseService
 {
     protected AuditLogService $auditLog;
 
+    /**
+     * Create a new organization settings service instance.
+     *
+     * @param PDO|null $pdo Optional PDO instance
+     * @param AuditLogService|null $auditLog Optional audit log service instance
+     */
     public function __construct(?PDO $pdo = null, ?AuditLogService $auditLog = null)
     {
         parent::__construct($pdo);
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Get all settings for an organization as a key-value array.
+     *
+     * @param int $orgId The organization ID
+     * @return array Associative array of setting keys to values (with type casting applied)
+     */
     public function getAll(int $orgId): array
     {
         if (!$this->pdo) return [];
@@ -30,11 +42,25 @@ class OrganizationSettingsService extends BaseService
         return $settings;
     }
 
+    /**
+     * Alias for getAll - get all settings for an organization.
+     *
+     * @param int $orgId The organization ID
+     * @return array Associative array of setting keys to values
+     */
     public function getAllSettings(int $orgId): array
     {
         return $this->getAll($orgId);
     }
 
+    /**
+     * Get a single setting value by key.
+     *
+     * @param int $orgId The organization ID
+     * @param string $key The setting key
+     * @param mixed $default The default value to return if setting not found
+     * @return mixed The setting value (type-cast) or default if not found
+     */
     public function get(int $orgId, string $key, mixed $default = null): mixed
     {
         if (!$this->pdo) return $default;
@@ -46,11 +72,29 @@ class OrganizationSettingsService extends BaseService
         return $this->castValue($row['setting_value'], $row['setting_type']);
     }
 
+    /**
+     * Alias for get - get a single setting value by key.
+     *
+     * @param int $orgId The organization ID
+     * @param string $key The setting key
+     * @param mixed $default The default value to return if setting not found
+     * @return mixed The setting value or default if not found
+     */
     public function getSetting(int $orgId, string $key, mixed $default = null): mixed
     {
         return $this->get($orgId, $key, $default);
     }
 
+    /**
+     * Set or update a setting value.
+     *
+     * @param int $orgId The organization ID
+     * @param string $key The setting key
+     * @param mixed $value The setting value
+     * @param string $type The data type (string, integer, decimal, boolean, json)
+     * @param int|null $performedBy The user ID performing this action (for audit log)
+     * @return bool True if setting was saved successfully, false otherwise
+     */
     public function set(int $orgId, string $key, mixed $value, string $type = 'string', ?int $performedBy = null): bool
     {
         if (!$this->pdo) return false;
@@ -87,11 +131,27 @@ class OrganizationSettingsService extends BaseService
         return $ok;
     }
 
+    /**
+     * Alias for set - set or update a setting value.
+     *
+     * @param int $orgId The organization ID
+     * @param string $key The setting key
+     * @param mixed $value The setting value
+     * @param string $type The data type (string, integer, decimal, boolean, json)
+     * @return bool True if setting was saved successfully, false otherwise
+     */
     public function setSetting(int $orgId, string $key, mixed $value, string $type = 'string'): bool
     {
         return $this->set($orgId, $key, $value, $type);
     }
 
+    /**
+     * Cast a setting value from string to its appropriate type.
+     *
+     * @param string|null $val The string value from database
+     * @param string $type The data type (integer, decimal, boolean, json, string)
+     * @return mixed The type-cast value
+     */
     private function castValue(?string $val, string $type): mixed
     {
         if ($val === null) return null;
