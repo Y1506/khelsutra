@@ -10,12 +10,26 @@ class AuthService extends BaseService
 {
     protected AuditLogService $auditLog;
 
+    /**
+     * AuthService constructor.
+     *
+     * @param PDO|null $pdo Database connection
+     * @param AuditLogService|null $auditLog Audit log service
+     */
     public function __construct(?PDO $pdo = null, ?AuditLogService $auditLog = null)
     {
         parent::__construct($pdo);
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Authenticate user and generate access token.
+     *
+     * @param string $email User email
+     * @param string $password User password
+     * @param string|null $orgCode Optional organization code
+     * @return array|null User data with token and permissions, null if authentication fails
+     */
     public function login(string $email, string $password, ?string $orgCode = null): ?array
     {
         if (!$this->pdo) {
@@ -186,6 +200,13 @@ class AuthService extends BaseService
         ];
     }
 
+    /**
+     * Log user out and record audit event.
+     *
+     * @param int|null $userId User ID
+     * @param int|null $orgId Organization ID
+     * @return bool Always returns true
+     */
     public function logout(?int $userId = null, ?int $orgId = null): bool
     {
         if ($userId) {
@@ -194,6 +215,12 @@ class AuthService extends BaseService
         return true;
     }
 
+    /**
+     * Resolve user data from authentication token.
+     *
+     * @param string $token HMAC-signed authentication token
+     * @return array|null User data with role and permissions, null if token is invalid or expired
+     */
     public function resolveUserByToken(string $token): ?array
     {
         if (empty($token) || !str_contains($token, '.')) return null;

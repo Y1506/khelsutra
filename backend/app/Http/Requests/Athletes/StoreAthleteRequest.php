@@ -6,11 +6,21 @@ class StoreAthleteRequest
 {
     public array $data;
 
+    /**
+     * StoreAthleteRequest constructor.
+     *
+     * @param array $data Athlete data to validate
+     */
     public function __construct(array $data)
     {
         $this->data = $data;
     }
 
+    /**
+     * Validate athlete data.
+     *
+     * @return array Validation errors (empty if valid)
+     */
     public function validate(): array
     {
         $errors = [];

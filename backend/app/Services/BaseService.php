@@ -9,6 +9,11 @@ abstract class BaseService
 {
     protected ?PDO $pdo = null;
 
+    /**
+     * BaseService constructor.
+     *
+     * @param PDO|null $pdo Database connection
+     */
     public function __construct(?PDO $pdo = null)
     {
         if ($pdo) {
@@ -18,6 +23,11 @@ abstract class BaseService
         }
     }
 
+    /**
+     * Get or create a singleton database connection.
+     *
+     * @return PDO|null Database connection or null on failure
+     */
     public static function getDatabaseConnection(): ?PDO
     {
         static $instance = null;
@@ -39,21 +49,41 @@ abstract class BaseService
         return $instance;
     }
 
+    /**
+     * Get the PDO database connection.
+     *
+     * @return PDO|null Database connection
+     */
     public function getPdo(): ?PDO
     {
         return $this->pdo;
     }
 
+    /**
+     * Begin a database transaction.
+     *
+     * @return bool True on success
+     */
     public function beginTransaction(): bool
     {
         return $this->pdo && $this->pdo->beginTransaction();
     }
 
+    /**
+     * Commit the current database transaction.
+     *
+     * @return bool True on success
+     */
     public function commit(): bool
     {
         return $this->pdo && $this->pdo->commit();
     }
 
+    /**
+     * Roll back the current database transaction.
+     *
+     * @return bool True on success
+     */
     public function rollBack(): bool
     {
         return $this->pdo && $this->pdo->rollBack();

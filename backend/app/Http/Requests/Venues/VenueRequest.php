@@ -7,6 +7,11 @@ use Illuminate\Validation\Rule;
 
 class VenueRequest extends BaseFormRequest
 {
+    /**
+     * Get validation rules for venue request.
+     *
+     * @return array Validation rules
+     */
     public function rules(): array
     {
         return [

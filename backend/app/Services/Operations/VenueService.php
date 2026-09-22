@@ -11,7 +11,11 @@ use Exception;
 class VenueService
 {
     /**
-     * Create a new venue
+     * Create a new venue.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Venue data
+     * @return Venue Created venue
      */
     public function create(int $orgId, array $data): Venue
     {
@@ -31,7 +35,13 @@ class VenueService
     }
 
     /**
-     * Update a venue
+     * Update a venue.
+     *
+     * @param int $orgId Organization ID
+     * @param int $venueId Venue ID to update
+     * @param array $data Updated venue data
+     * @return Venue Updated venue
+     * @throws Exception If venue not found
      */
     public function update(int $orgId, int $venueId, array $data): Venue
     {
@@ -43,7 +53,12 @@ class VenueService
     }
 
     /**
-     * Delete a venue (soft delete if no active bookings)
+     * Delete a venue (soft delete if no active bookings).
+     *
+     * @param int $orgId Organization ID
+     * @param int $venueId Venue ID to delete
+     * @return void
+     * @throws Exception If venue has future active bookings or not found
      */
     public function delete(int $orgId, int $venueId): void
     {

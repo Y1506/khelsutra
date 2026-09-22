@@ -12,6 +12,11 @@ abstract class BaseFormRequest
 {
     public array $data;
 
+    /**
+     * BaseFormRequest constructor.
+     *
+     * @param array $data Request data to validate
+     */
     public function __construct(array $data)
     {
         $this->data = $data;
@@ -20,8 +25,18 @@ abstract class BaseFormRequest
         }
     }
 
+    /**
+     * Get validation rules.
+     *
+     * @return array Validation rules
+     */
     abstract public function rules(): array;
 
+    /**
+     * Validate request data against rules.
+     *
+     * @return array Validation errors (empty if valid)
+     */
     public function validate(): array
     {
         $loader = new ArrayLoader();

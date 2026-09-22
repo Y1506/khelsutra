@@ -9,6 +9,11 @@ class TeamRepository implements TeamRepositoryInterface
 {
     protected ?PDO $pdo = null;
 
+    /**
+     * TeamRepository constructor.
+     *
+     * @param PDO|null $pdo Database connection
+     */
     public function __construct(?PDO $pdo = null)
     {
         if ($pdo) {
@@ -30,6 +35,14 @@ class TeamRepository implements TeamRepositoryInterface
         }
     }
 
+    /**
+     * Get paginated teams for an organization.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $page Page number
+     * @param int $limit Items per page
+     * @return array List of teams
+     */
     public function getPaginated(int $organizationId, int $page = 1, int $limit = 15): array
     {
         if (!$this->pdo) return [];
@@ -42,6 +55,13 @@ class TeamRepository implements TeamRepositoryInterface
         return $stmt->fetchAll();
     }
 
+    /**
+     * Find a team by ID.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Team ID
+     * @return array|null Team data or null if not found
+     */
     public function findById(int $organizationId, int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -53,6 +73,12 @@ class TeamRepository implements TeamRepositoryInterface
         return $res ?: null;
     }
 
+    /**
+     * Create a new team.
+     *
+     * @param array $data Team data
+     * @return array Created team data with ID
+     */
     public function create(array $data): array
     {
         if (!$this->pdo) return $data;

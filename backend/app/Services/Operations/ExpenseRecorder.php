@@ -8,6 +8,15 @@ use Exception;
 
 class ExpenseRecorder implements ExpenseRecorderInterface
 {
+    /**
+     * Record an expense in the finance system.
+     *
+     * @param int $orgId Organization ID
+     * @param float $amount Expense amount
+     * @param string $description Expense description
+     * @param array $options Optional parameters (vendor_id, event_id, created_by)
+     * @return int Created expense ID
+     */
     public function recordExpense(int $orgId, float $amount, string $description, array $options = []): int
     {
         return DB::transaction(function () use ($orgId, $amount, $description, $options) {

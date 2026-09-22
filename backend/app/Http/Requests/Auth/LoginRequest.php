@@ -8,6 +8,11 @@ class LoginRequest
     public string $password;
     public ?string $organization_code = null;
 
+    /**
+     * LoginRequest constructor.
+     *
+     * @param array $data Login credentials
+     */
     public function __construct(array $data)
     {
         $this->email = $data['email'] ?? '';
@@ -15,6 +20,11 @@ class LoginRequest
         $this->organization_code = $data['organization_code'] ?? null;
     }
 
+    /**
+     * Validate login credentials.
+     *
+     * @return array Validation errors (empty if valid)
+     */
     public function validate(): array
     {
         $errors = [];

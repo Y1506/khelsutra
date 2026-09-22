@@ -11,11 +11,23 @@ class VenueBookingService
 {
     protected VenueAvailabilityService $availability;
 
+    /**
+     * VenueBookingService constructor.
+     */
     public function __construct()
     {
         $this->availability = new VenueAvailabilityService();
     }
 
+    /**
+     * Create a new venue booking with availability check.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Booking data including venue_id, booking_date, start_time, end_time
+     * @param bool $hasManagePerm Whether user has manage permission (auto-approve if true)
+     * @return VenueBooking Created booking
+     * @throws Exception If venue is unavailable or conflicts exist
+     */
     public function createBooking(int $orgId, array $data, bool $hasManagePerm): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $data, $hasManagePerm) {
@@ -46,6 +58,16 @@ class VenueBookingService
         });
     }
 
+    /**
+     * Cancel a venue booking.
+     *
+     * @param int $orgId Organization ID
+     * @param int $bookingId Booking ID to cancel
+     * @param int $userId User ID performing cancellation
+     * @param string $reason Optional cancellation reason
+     * @return VenueBooking Updated booking
+     * @throws Exception If booking is already cancelled or completed
+     */
     public function cancelBooking(int $orgId, int $bookingId, int $userId, string $reason = ''): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $bookingId, $userId, $reason) {
@@ -64,6 +86,15 @@ class VenueBookingService
         });
     }
 
+    /**
+     * Reschedule a venue booking with availability check.
+     *
+     * @param int $orgId Organization ID
+     * @param int $bookingId Booking ID to reschedule
+     * @param array $data Updated booking data (booking_date, start_time, end_time, etc.)
+     * @return VenueBooking Updated booking
+     * @throws Exception If booking cannot be rescheduled or conflicts exist
+     */
     public function rescheduleBooking(int $orgId, int $bookingId, array $data): VenueBooking
     {
         return DB::transaction(function () use ($orgId, $bookingId, $data) {

@@ -7,6 +7,11 @@ use Illuminate\Validation\Rule;
 
 class FacilityRequest extends BaseFormRequest
 {
+    /**
+     * Get validation rules for facility request.
+     *
+     * @return array Validation rules
+     */
     public function rules(): array
     {
         return [

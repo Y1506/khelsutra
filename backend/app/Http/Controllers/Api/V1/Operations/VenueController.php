@@ -11,11 +11,21 @@ class VenueController
 {
     protected VenueService $venueService;
 
+    /**
+     * VenueController constructor.
+     */
     public function __construct()
     {
         $this->venueService = new VenueService();
     }
 
+    /**
+     * List all venues with pagination.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData Request data with optional pagination params
+     * @return array API response with venues list
+     */
     public function index(int $orgId, array $requestData): array
     {
         $limit = (int)($requestData['limit'] ?? 15);
@@ -36,6 +46,13 @@ class VenueController
         ]);
     }
 
+    /**
+     * Create a new venue.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData Venue data
+     * @return array API response with created venue
+     */
     public function store(int $orgId, array $requestData): array
     {
         $request = new VenueRequest($requestData);
@@ -49,6 +66,13 @@ class VenueController
         return ApiResponse::success($venue->toArray(), 'Venue created successfully', 201);
     }
 
+    /**
+     * Get a specific venue by ID.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Venue ID
+     * @return array API response with venue data
+     */
     public function show(int $orgId, int $id): array
     {
         $venue = Venue::where('organization_id', $orgId)->find($id);
@@ -58,6 +82,14 @@ class VenueController
         return ApiResponse::success($venue->toArray());
     }
 
+    /**
+     * Update a venue.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Venue ID
+     * @param array $requestData Updated venue data
+     * @return array API response with updated venue
+     */
     public function update(int $orgId, int $id, array $requestData): array
     {
         $request = new VenueRequest($requestData);
@@ -75,6 +107,13 @@ class VenueController
         }
     }
 
+    /**
+     * Delete a venue.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Venue ID
+     * @return array API response confirming deletion
+     */
     public function destroy(int $orgId, int $id): array
     {
         try {

@@ -9,6 +9,11 @@ class AthleteRepository implements AthleteRepositoryInterface
 {
     protected ?PDO $pdo = null;
 
+    /**
+     * AthleteRepository constructor.
+     *
+     * @param PDO|null $pdo Database connection
+     */
     public function __construct(?PDO $pdo = null)
     {
         if ($pdo) {
@@ -30,6 +35,14 @@ class AthleteRepository implements AthleteRepositoryInterface
         }
     }
 
+    /**
+     * Get paginated athletes for an organization.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $page Page number
+     * @param int $limit Items per page
+     * @return array List of athletes
+     */
     public function getPaginated(int $organizationId, int $page = 1, int $limit = 15): array
     {
         if (!$this->pdo) return [];
@@ -42,6 +55,13 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $stmt->fetchAll();
     }
 
+    /**
+     * Find an athlete by ID.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Athlete ID
+     * @return array|null Athlete data or null if not found
+     */
     public function findById(int $organizationId, int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -53,6 +73,12 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $res ?: null;
     }
 
+    /**
+     * Create a new athlete.
+     *
+     * @param array $data Athlete data
+     * @return array Created athlete data with ID
+     */
     public function create(array $data): array
     {
         if (!$this->pdo) return $data;
@@ -75,6 +101,14 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $data;
     }
 
+    /**
+     * Update an athlete.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Athlete ID
+     * @param array $data Updated athlete data
+     * @return bool True on success
+     */
     public function update(int $organizationId, int $id, array $data): bool
     {
         if (!$this->pdo) return false;
@@ -92,6 +126,13 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $stmt->execute($params);
     }
 
+    /**
+     * Soft delete an athlete.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Athlete ID
+     * @return bool True on success
+     */
     public function delete(int $organizationId, int $id): bool
     {
         if (!$this->pdo) return false;
