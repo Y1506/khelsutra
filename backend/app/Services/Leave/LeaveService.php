@@ -11,12 +11,24 @@ class LeaveService extends BaseService
 {
     protected AuditLogService $auditLog;
 
+    /**
+     * Create a new leave service instance.
+     *
+     * @param PDO|null $pdo Optional PDO instance
+     * @param AuditLogService|null $auditLog Optional audit log service instance
+     */
     public function __construct(?PDO $pdo = null, ?AuditLogService $auditLog = null)
     {
         parent::__construct($pdo);
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Get all active leave types for an organization.
+     *
+     * @param int $orgId The organization ID
+     * @return array Array of leave type records
+     */
     public function listLeaveTypes(int $orgId): array
     {
         if (!$this->pdo) return [];
@@ -25,6 +37,14 @@ class LeaveService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Create a new leave type for an organization.
+     *
+     * @param int $orgId The organization ID
+     * @param array $data The leave type data including name, description, max_days_per_year
+     * @param int|null $performedBy The user ID performing this action (for audit log)
+     * @return array|null The created leave type record or null on failure
+     */
     public function createLeaveType(int $orgId, array $data, ?int $performedBy = null): ?array
     {
         if (!$this->pdo || empty($data['name'])) return null;
@@ -49,6 +69,15 @@ class LeaveService extends BaseService
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    /**
+     * Get a paginated list of leave requests with optional status filter.
+     *
+     * @param int $orgId The organization ID
+     * @param string|null $status Optional status filter (pending, approved, rejected, cancelled)
+     * @param int $limit The number of records to return (default 50)
+     * @param int $offset The offset for pagination (default 0)
+     * @return array Array of leave request records with related data
+     */
     public function listLeaveRequests(int $orgId, ?string $status = null, int $limit = 50, int $offset = 0): array
     {
         if (!$this->pdo) return [];
@@ -84,6 +113,13 @@ class LeaveService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Get a single leave request by ID.
+     *
+     * @param int $orgId The organization ID
+     * @param int $id The leave request ID
+     * @return array|null The leave request record with related data or null if not found
+     */
     public function getLeaveRequest(int $orgId, int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -104,6 +140,14 @@ class LeaveService extends BaseService
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    /**
+     * Get leave request details with validation that it exists.
+     *
+     * @param int $id The leave request ID
+     * @param int $orgId The organization ID
+     * @return array|null The leave request record
+     * @throws \Exception If leave request not found
+     */
     public function getLeaveRequestDetails(int $id, int $orgId): ?array
     {
         $res = $this->getLeaveRequest($orgId, $id);
@@ -113,6 +157,16 @@ class LeaveService extends BaseService
         return $res;
     }
 
+    /**
+     * Submit a new leave application with validation.
+     * Validates date ranges, checks for overlaps, and enforces business rules.
+     *
+     * @param int $orgId The organization ID
+     * @param array $data The leave application data including start_date, end_date, leave_type_id, applicant details
+     * @param int|null $performedBy The user ID performing this action (for audit log)
+     * @return array|null The created leave request record or null on failure
+     * @throws Exception If validation fails (invalid dates, overlapping requests, etc.)
+     */
     public function applyLeave(int $orgId, array $data, ?int $performedBy = null): ?array
     {
         if (!$this->pdo) return null;
@@ -204,6 +258,18 @@ class LeaveService extends BaseService
         return $this->getLeaveRequest($orgId, $newId);
     }
 
+    /**
+     * Review and approve/reject a leave request.
+     * Enforces separation of duties - applicant cannot approve their own request.
+     *
+     * @param int $orgId The organization ID
+     * @param int $leaveId The leave request ID
+     * @param string $status The new status (approved, rejected, or cancelled)
+     * @param string|null $rejectionReason The reason for rejection (required if status is rejected)
+     * @param int $approverUserId The user ID of the approver
+     * @return bool True if review succeeded, false otherwise
+     * @throws Exception If separation of duties is violated
+     */
     public function reviewLeave(int $orgId, int $leaveId, string $status, ?string $rejectionReason, int $approverUserId): bool
     {
         if (!$this->pdo || !in_array($status, ['approved', 'rejected', 'cancelled'], true)) {

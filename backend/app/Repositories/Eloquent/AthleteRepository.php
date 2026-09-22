@@ -9,6 +9,11 @@ class AthleteRepository implements AthleteRepositoryInterface
 {
     protected ?PDO $pdo = null;
 
+    /**
+     * Create a new athlete repository instance.
+     *
+     * @param PDO|null $pdo Optional PDO instance, creates new connection if not provided
+     */
     public function __construct(?PDO $pdo = null)
     {
         if ($pdo) {
@@ -30,6 +35,14 @@ class AthleteRepository implements AthleteRepositoryInterface
         }
     }
 
+    /**
+     * Get a paginated list of athletes for an organization.
+     *
+     * @param int $organizationId The organization ID
+     * @param int $page The page number (default 1)
+     * @param int $limit The number of records per page (default 15)
+     * @return array Array of athlete records with sport names
+     */
     public function getPaginated(int $organizationId, int $page = 1, int $limit = 15): array
     {
         if (!$this->pdo) return [];
@@ -42,6 +55,13 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $stmt->fetchAll();
     }
 
+    /**
+     * Find an athlete by ID within an organization.
+     *
+     * @param int $organizationId The organization ID
+     * @param int $id The athlete ID
+     * @return array|null The athlete record or null if not found
+     */
     public function findById(int $organizationId, int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -53,6 +73,12 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $res ?: null;
     }
 
+    /**
+     * Create a new athlete record.
+     *
+     * @param array $data The athlete data including organization_id, first_name, date_of_birth, gender, etc.
+     * @return array The created athlete data with the new ID
+     */
     public function create(array $data): array
     {
         if (!$this->pdo) return $data;
@@ -75,6 +101,14 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $data;
     }
 
+    /**
+     * Update an athlete's information.
+     *
+     * @param int $organizationId The organization ID
+     * @param int $id The athlete ID
+     * @param array $data The fields to update
+     * @return bool True if update succeeded, false otherwise
+     */
     public function update(int $organizationId, int $id, array $data): bool
     {
         if (!$this->pdo) return false;
@@ -92,6 +126,13 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $stmt->execute($params);
     }
 
+    /**
+     * Soft delete an athlete by setting deleted_at timestamp.
+     *
+     * @param int $organizationId The organization ID
+     * @param int $id The athlete ID
+     * @return bool True if deletion succeeded, false otherwise
+     */
     public function delete(int $organizationId, int $id): bool
     {
         if (!$this->pdo) return false;

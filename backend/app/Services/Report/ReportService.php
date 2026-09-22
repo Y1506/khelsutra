@@ -4,6 +4,12 @@ namespace App\Services\Report;
 
 class ReportService
 {
+    /**
+     * Get dashboard metrics for an organization.
+     *
+     * @param int $organizationId The organization ID
+     * @return array Array of metric counts (athletes, coaches, teams, tournaments, etc.)
+     */
     public function getDashboardMetrics(int $organizationId): array
     {
         return [

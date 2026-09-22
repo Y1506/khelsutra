@@ -6,6 +6,13 @@ $basePath = dirname(__DIR__);
 
 // Global env helper
 if (!function_exists('env')) {
+    /**
+     * Get an environment variable value.
+     *
+     * @param string $key The environment variable key
+     * @param mixed $default The default value if key not found
+     * @return mixed The environment variable value or default
+     */
     function env($key, $default = null) {
         static $envCache = null;
         if ($envCache === null) {
@@ -26,6 +33,12 @@ if (!function_exists('env')) {
 
 // Global storage_path helper
 if (!function_exists('storage_path')) {
+    /**
+     * Get the path to the storage directory.
+     *
+     * @param string $path Optional path to append
+     * @return string The full storage path
+     */
     function storage_path($path = '') {
         return dirname(__DIR__) . '/storage/' . ltrim($path, '/');
     }
@@ -33,6 +46,12 @@ if (!function_exists('storage_path')) {
 
 // Global base_path helper
 if (!function_exists('base_path')) {
+    /**
+     * Get the path to the application base directory.
+     *
+     * @param string $path Optional path to append
+     * @return string The full base path
+     */
     function base_path($path = '') {
         return dirname(__DIR__) . '/' . ltrim($path, '/');
     }

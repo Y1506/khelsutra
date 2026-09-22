@@ -21,6 +21,13 @@ require_once __DIR__ . '/../app/Helpers/ApiResponse.php';
 
 // Helper env function
 if (!function_exists('env')) {
+    /**
+     * Get an environment variable value.
+     *
+     * @param string $key The environment variable key
+     * @param mixed $default The default value if key not found
+     * @return mixed The environment variable value or default
+     */
     function env($key, $default = null) {
         static $envCache = null;
         if ($envCache === null) {
