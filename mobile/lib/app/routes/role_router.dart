@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import '../../features/athlete/screens/athlete_dashboard_screen.dart';
 import '../../features/coach/screens/coach_dashboard_screen.dart';
 
+/// Routes users to appropriate dashboard screens based on their role.
 class RoleRouter extends StatelessWidget {
   final String role;
 
+  /// Creates a role-based router widget with the specified user role.
   const RoleRouter({super.key, required this.role});
 
+  /// Builds the appropriate dashboard screen based on the user's role.
   @override
   Widget build(BuildContext context) {
     switch (role.toLowerCase()) {

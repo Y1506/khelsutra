@@ -5,10 +5,18 @@ namespace App\Repositories\Eloquent;
 use App\Repositories\Contracts\TeamRepositoryInterface;
 use PDO;
 
+/**
+ * Provides database operations for team entities.
+ */
 class TeamRepository implements TeamRepositoryInterface
 {
     protected ?PDO $pdo = null;
 
+    /**
+     * Create a new TeamRepository instance with database connection.
+     *
+     * @param PDO|null $pdo Optional PDO instance; creates new connection if null
+     */
     public function __construct(?PDO $pdo = null)
     {
         if ($pdo) {
@@ -30,6 +38,14 @@ class TeamRepository implements TeamRepositoryInterface
         }
     }
 
+    /**
+     * Retrieve a paginated list of teams with sport names.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $page Page number
+     * @param int $limit Number of teams per page
+     * @return array Paginated team data with sport names
+     */
     public function getPaginated(int $organizationId, int $page = 1, int $limit = 15): array
     {
         if (!$this->pdo) return [];
@@ -42,6 +58,13 @@ class TeamRepository implements TeamRepositoryInterface
         return $stmt->fetchAll();
     }
 
+    /**
+     * Find a specific team by ID with sport name.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Team ID
+     * @return array|null Team data or null if not found
+     */
     public function findById(int $organizationId, int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -53,6 +76,12 @@ class TeamRepository implements TeamRepositoryInterface
         return $res ?: null;
     }
 
+    /**
+     * Create a new team record.
+     *
+     * @param array $data Team data including organization_id, sport_id, and name
+     * @return array Created team data with generated ID
+     */
     public function create(array $data): array
     {
         if (!$this->pdo) return $data;

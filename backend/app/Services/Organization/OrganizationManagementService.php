@@ -7,16 +7,32 @@ use App\Services\Audit\AuditLogService;
 use PDO;
 use Exception;
 
+/**
+ * Manages organization CRUD operations, status changes, access logs, and admin user creation.
+ */
 class OrganizationManagementService extends BaseService
 {
     protected AuditLogService $auditLog;
 
+    /**
+     * Create a new OrganizationManagementService instance.
+     *
+     * @param PDO|null $pdo Database connection
+     * @param AuditLogService|null $auditLog Audit logging service
+     */
     public function __construct(?PDO $pdo = null, ?AuditLogService $auditLog = null)
     {
         parent::__construct($pdo);
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Retrieve a paginated list of all organizations with user and employee counts.
+     *
+     * @param int $limit Maximum number of organizations to return
+     * @param int $offset Number of organizations to skip
+     * @return array List of organizations with aggregate counts
+     */
     public function listOrganizations(int $limit = 50, int $offset = 0): array
     {
         if (!$this->pdo) return [];
@@ -35,6 +51,12 @@ class OrganizationManagementService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Retrieve a specific organization by ID.
+     *
+     * @param int $id Organization ID
+     * @return array|null Organization data or null if not found
+     */
     public function getOrganization(int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -43,6 +65,16 @@ class OrganizationManagementService extends BaseService
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    /**
+     * Create a new organization with auto-generated code and access log.
+     *
+     * Sets default status to 'active' and creates a 1-year access period.
+     * Records creation in audit logs and access history.
+     *
+     * @param array $data Organization data including name and optional contact details
+     * @param int|null $performedBy User ID performing this action
+     * @return array|null Created organization data or null on failure
+     */
     public function createOrganization(array $data, ?int $performedBy = null): ?array
     {
         if (!$this->pdo) return null;
@@ -102,6 +134,16 @@ class OrganizationManagementService extends BaseService
         return $this->getOrganization($newOrgId);
     }
 
+    /**
+     * Update an existing organization's details.
+     *
+     * Merges new data with existing values and records changes in audit log.
+     *
+     * @param int $id Organization ID
+     * @param array $data Updated organization data
+     * @param int|null $performedBy User ID performing this action
+     * @return array|null Updated organization data or null on failure
+     */
     public function updateOrganization(int $id, array $data, ?int $performedBy = null): ?array
     {
         if (!$this->pdo) return null;
@@ -152,6 +194,17 @@ class OrganizationManagementService extends BaseService
         return $updated;
     }
 
+    /**
+     * Change the status of an organization and log the action.
+     *
+     * Records the status change in both access logs and audit logs.
+     *
+     * @param int $id Organization ID
+     * @param string $newStatus New status (pending, active, suspended, expired, inactive)
+     * @param string|null $remarks Optional notes about the status change
+     * @param int|null $performedBy User ID performing this action
+     * @return bool True on success, false on failure
+     */
     public function updateStatus(int $id, string $newStatus, ?string $remarks = null, ?int $performedBy = null): bool
     {
         if (!$this->pdo) return false;
@@ -179,6 +232,19 @@ class OrganizationManagementService extends BaseService
         return $ok;
     }
 
+    /**
+     * Record an organization access event in the access log.
+     *
+     * @param int $orgId Organization ID
+     * @param string $action Action performed (created, activated, suspended, etc.)
+     * @param string|null $prevStatus Previous status
+     * @param string|null $newStatus New status
+     * @param string|null $start Access start date
+     * @param string|null $end Access end date
+     * @param int|null $by User ID who performed the action
+     * @param string|null $remarks Optional notes
+     * @return bool True on success, false on failure
+     */
     public function logAccess(int $orgId, string $action, ?string $prevStatus, ?string $newStatus, ?string $start, ?string $end, ?int $by, ?string $remarks): bool
     {
         if (!$this->pdo) return false;
@@ -198,6 +264,12 @@ class OrganizationManagementService extends BaseService
         ]);
     }
 
+    /**
+     * Retrieve all access logs for an organization in descending chronological order.
+     *
+     * @param int $orgId Organization ID
+     * @return array List of access log entries
+     */
     public function getAccessLogs(int $orgId): array
     {
         if (!$this->pdo) return [];
@@ -206,6 +278,17 @@ class OrganizationManagementService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Create or assign an initial Sports Administrator user for an organization.
+     *
+     * Creates a new user if one doesn't exist with the given email, then assigns
+     * them the Sports Administrator role (role_id 2) in the organization.
+     *
+     * @param int $orgId Organization ID
+     * @param array $adminData Admin user data including email, first_name, and optional password
+     * @param int|null $superAdminId Super admin user ID performing this action
+     * @return array|null Created admin user info or null on failure
+     */
     public function createInitialSportsAdmin(int $orgId, array $adminData, ?int $superAdminId = null): ?array
     {
         if (!$this->pdo) return null;

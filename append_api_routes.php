@@ -1,4 +1,11 @@
 <?php
+/**
+ * Utility script to append maintenance and housekeeping routes to backend API routes file.
+ *
+ * Inserts route definitions for maintenance and housekeeping endpoints before the fallback
+ * section in the api.php routes file.
+ */
+
 $content = file_get_contents('backend/routes/api.php');
 $pos = strrpos($content, '// 13. Fallback for other unassigned modules');
 if ($pos !== false) {

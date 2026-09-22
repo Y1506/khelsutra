@@ -6,16 +6,33 @@ use App\Services\BaseService;
 use App\Services\Audit\AuditLogService;
 use PDO;
 
+/**
+ * Manages user CRUD operations, role assignments, and status changes with audit logging.
+ */
 class UserManagementService extends BaseService
 {
     protected AuditLogService $auditLog;
 
+    /**
+     * Create a new UserManagementService instance.
+     *
+     * @param PDO|null $pdo Database connection
+     * @param AuditLogService|null $auditLog Audit logging service
+     */
     public function __construct(?PDO $pdo = null, ?AuditLogService $auditLog = null)
     {
         parent::__construct($pdo);
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Retrieve a paginated list of users with role and organization details.
+     *
+     * @param int|null $orgId Optional organization ID to filter by
+     * @param int $limit Maximum number of users to return
+     * @param int $offset Number of users to skip
+     * @return array List of users with joined role and organization data
+     */
     public function listUsers(?int $orgId = null, int $limit = 50, int $offset = 0): array
     {
         if (!$this->pdo) return [];
@@ -49,6 +66,12 @@ class UserManagementService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Retrieve a specific user by ID with role and organization details.
+     *
+     * @param int $id User ID
+     * @return array|null User data or null if not found
+     */
     public function getUser(int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -67,6 +90,17 @@ class UserManagementService extends BaseService
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    /**
+     * Create a new user and assign them to an organization with a role.
+     *
+     * Validates email uniqueness, generates UUID, hashes password, and records
+     * the creation in audit logs.
+     *
+     * @param array $data User data including email, first_name, and optional password/role_id
+     * @param int $orgId Organization ID to assign the user to
+     * @param int|null $performedBy User ID performing this action
+     * @return array|null Created user data or null on failure/duplicate email
+     */
     public function createUser(array $data, int $orgId, ?int $performedBy = null): ?array
     {
         if (!$this->pdo) return null;
@@ -125,6 +159,17 @@ class UserManagementService extends BaseService
         return $this->getUser($newUserId);
     }
 
+    /**
+     * Update an existing user's information and optionally their role.
+     *
+     * Updates basic profile fields and optionally updates the user's role
+     * within their organization. Records changes in audit logs.
+     *
+     * @param int $id User ID
+     * @param array $data Updated user data including optional role_id and organization_id
+     * @param int|null $performedBy User ID performing this action
+     * @return array|null Updated user data or null on failure
+     */
     public function updateUser(int $id, array $data, ?int $performedBy = null): ?array
     {
         if (!$this->pdo) return null;
@@ -167,6 +212,14 @@ class UserManagementService extends BaseService
         return $updated;
     }
 
+    /**
+     * Change a user's status and record the action in audit logs.
+     *
+     * @param int $id User ID
+     * @param string $status New status (active, inactive, locked)
+     * @param int|null $performedBy User ID performing this action
+     * @return bool True on success, false on failure
+     */
     public function setUserStatus(int $id, string $status, ?int $performedBy = null): bool
     {
         if (!$this->pdo || !in_array($status, ['active', 'inactive', 'locked'], true)) {

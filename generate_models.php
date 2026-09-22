@@ -1,4 +1,11 @@
 <?php
+/**
+ * Utility script to auto-generate Eloquent model classes for operations-related entities.
+ *
+ * Creates model files in backend/app/Models/ with appropriate traits (SoftDeletes,
+ * BelongsToOrganization) and table configurations based on the models array.
+ */
+
 $models = [
     'Venue' => ['table' => 'venues', 'soft_deletes' => true],
     'Facility' => ['table' => 'venue_facilities', 'soft_deletes' => true],

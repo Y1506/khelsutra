@@ -5,10 +5,18 @@ namespace App\Repositories\Eloquent;
 use App\Repositories\Contracts\AthleteRepositoryInterface;
 use PDO;
 
+/**
+ * Provides database operations for athlete entities.
+ */
 class AthleteRepository implements AthleteRepositoryInterface
 {
     protected ?PDO $pdo = null;
 
+    /**
+     * Create a new AthleteRepository instance with database connection.
+     *
+     * @param PDO|null $pdo Optional PDO instance; creates new connection if null
+     */
     public function __construct(?PDO $pdo = null)
     {
         if ($pdo) {
@@ -30,6 +38,14 @@ class AthleteRepository implements AthleteRepositoryInterface
         }
     }
 
+    /**
+     * Retrieve a paginated list of athletes with sport names.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $page Page number
+     * @param int $limit Number of athletes per page
+     * @return array Paginated athlete data with sport names
+     */
     public function getPaginated(int $organizationId, int $page = 1, int $limit = 15): array
     {
         if (!$this->pdo) return [];
@@ -42,6 +58,13 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $stmt->fetchAll();
     }
 
+    /**
+     * Find a specific athlete by ID with sport name.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Athlete ID
+     * @return array|null Athlete data or null if not found
+     */
     public function findById(int $organizationId, int $id): ?array
     {
         if (!$this->pdo) return null;
@@ -53,6 +76,12 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $res ?: null;
     }
 
+    /**
+     * Create a new athlete record with auto-generated code.
+     *
+     * @param array $data Athlete data including first_name, date_of_birth, and gender
+     * @return array Created athlete data with generated ID
+     */
     public function create(array $data): array
     {
         if (!$this->pdo) return $data;
@@ -75,6 +104,14 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $data;
     }
 
+    /**
+     * Update an athlete's information with selective field updates.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Athlete ID
+     * @param array $data Updated fields (first_name, last_name, phone, email, status, etc.)
+     * @return bool True on success, false on failure
+     */
     public function update(int $organizationId, int $id, array $data): bool
     {
         if (!$this->pdo) return false;
@@ -92,6 +129,13 @@ class AthleteRepository implements AthleteRepositoryInterface
         return $stmt->execute($params);
     }
 
+    /**
+     * Soft delete an athlete by setting deleted_at timestamp.
+     *
+     * @param int $organizationId Organization ID
+     * @param int $id Athlete ID
+     * @return bool True on success, false on failure
+     */
     public function delete(int $organizationId, int $id): bool
     {
         if (!$this->pdo) return false;

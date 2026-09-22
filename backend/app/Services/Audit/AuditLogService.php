@@ -5,12 +5,32 @@ namespace App\Services\Audit;
 use App\Services\BaseService;
 use PDO;
 
+/**
+ * Provides audit logging for tracking user actions and data changes.
+ */
 class AuditLogService extends BaseService
 {
     private static array $sensitiveKeys = [
         'password', 'password_confirmation', 'token', 'remember_token', 'secret', 'api_key'
     ];
 
+    /**
+     * Create an audit log entry for a user action.
+     *
+     * Sanitizes sensitive fields from old/new values before storing.
+     * Records IP address and user agent for security tracking.
+     *
+     * @param int|null $orgId Organization ID context
+     * @param int|null $userId User who performed the action
+     * @param string $action Action type (e.g., CREATE, UPDATE, DELETE)
+     * @param string $module Module name (e.g., Auth, User, Organization)
+     * @param string|null $tableName Database table affected
+     * @param int|null $recordId ID of the affected record
+     * @param array|null $oldValues Previous values before change
+     * @param array|null $newValues New values after change
+     * @param string|null $description Human-readable description
+     * @return bool True on success, false on failure
+     */
     public function log(
         ?int $orgId,
         ?int $userId,
@@ -54,6 +74,16 @@ class AuditLogService extends BaseService
         ]);
     }
 
+    /**
+     * Retrieve audit logs with optional organization filtering.
+     *
+     * Includes user and organization details via joins.
+     *
+     * @param int|null $orgId Optional organization ID to filter by
+     * @param int $limit Maximum number of logs to return
+     * @param int $offset Number of logs to skip
+     * @return array List of audit log entries with related user/organization data
+     */
     public function getLogs(?int $orgId = null, int $limit = 50, int $offset = 0): array
     {
         if (!$this->pdo) return [];
@@ -81,6 +111,14 @@ class AuditLogService extends BaseService
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Recursively sanitize sensitive fields from data arrays.
+     *
+     * Replaces values of sensitive keys (password, token, etc.) with '[REDACTED]'.
+     *
+     * @param array $data Data to sanitize
+     * @return array Sanitized data with sensitive fields redacted
+     */
     public static function sanitize(array $data): array
     {
         $sanitized = [];

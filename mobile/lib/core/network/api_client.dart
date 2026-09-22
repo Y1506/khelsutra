@@ -5,14 +5,17 @@ import '../storage/token_storage.dart';
 import 'api_config.dart';
 import 'api_response.dart';
 
+/// HTTP client for making API requests with automatic token and organization ID injection.
 class ApiClient {
   final http.Client _client;
   final String _baseUrl;
 
+  /// Creates an API client with optional custom HTTP client and base URL.
   ApiClient({http.Client? client, String? baseUrl})
       : _client = client ?? http.Client(),
         _baseUrl = baseUrl ?? ApiConfig.localUrl;
 
+  /// Builds request headers including authentication token and organization ID.
   Future<Map<String, String>> _getHeaders() async {
     final token = await TokenStorage.getToken();
     final orgId = await TokenStorage.getOrganizationId();
@@ -29,6 +32,7 @@ class ApiClient {
     return headers;
   }
 
+  /// Performs an HTTP GET request to the specified endpoint.
   Future<ApiResponse<T>> get<T>(String endpoint, {T Function(dynamic)? fromJson}) async {
     try {
       final headers = await _getHeaders();
@@ -42,6 +46,7 @@ class ApiClient {
     }
   }
 
+  /// Performs an HTTP POST request with optional body to the specified endpoint.
   Future<ApiResponse<T>> post<T>(String endpoint, {dynamic body, T Function(dynamic)? fromJson}) async {
     try {
       final headers = await _getHeaders();
@@ -56,6 +61,7 @@ class ApiClient {
     }
   }
 
+  /// Performs an HTTP PUT request with optional body to the specified endpoint.
   Future<ApiResponse<T>> put<T>(String endpoint, {dynamic body, T Function(dynamic)? fromJson}) async {
     try {
       final headers = await _getHeaders();
@@ -70,6 +76,7 @@ class ApiClient {
     }
   }
 
+  /// Performs an HTTP PATCH request with optional body to the specified endpoint.
   Future<ApiResponse<T>> patch<T>(String endpoint, {dynamic body, T Function(dynamic)? fromJson}) async {
     try {
       final headers = await _getHeaders();
@@ -84,6 +91,7 @@ class ApiClient {
     }
   }
 
+  /// Performs an HTTP DELETE request to the specified endpoint.
   Future<ApiResponse<T>> delete<T>(String endpoint, {T Function(dynamic)? fromJson}) async {
     try {
       final headers = await _getHeaders();
@@ -97,6 +105,7 @@ class ApiClient {
     }
   }
 
+  /// Processes HTTP response and throws appropriate exceptions for error status codes.
   ApiResponse<T> _processResponse<T>(http.Response response, T Function(dynamic)? fromJson) {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -114,6 +123,7 @@ class ApiClient {
     }
   }
 
+  /// Wraps exceptions in appropriate app exception types.
   Exception _handleError(dynamic error) {
     if (error is AppException) return error;
     return NetworkException(error.toString());

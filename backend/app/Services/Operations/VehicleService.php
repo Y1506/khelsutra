@@ -6,18 +6,38 @@ use App\Models\Vehicle;
 use Illuminate\Database\Capsule\Manager as DB;
 use Exception;
 
+/**
+ * Provides vehicle management operations with transaction support.
+ */
 class VehicleService
 {
+    /**
+     * Create a new vehicle with default status 'available'.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Vehicle data
+     * @return Vehicle The created vehicle
+     */
     public function createVehicle(int $orgId, array $data): Vehicle
     {
         return DB::transaction(function () use ($orgId, $data) {
             $data['organization_id'] = $orgId;
             $data['status'] = $data['status'] ?? 'available';
-            
+
             return Vehicle::create($data);
         });
     }
 
+    /**
+     * Delete a vehicle after checking for active trips.
+     *
+     * Prevents deletion if the vehicle has any planned or in-progress trips.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id Vehicle ID
+     * @return bool True on successful deletion
+     * @throws Exception If vehicle has active trips
+     */
     public function deleteVehicle(int $orgId, int $id): bool
     {
         return DB::transaction(function () use ($orgId, $id) {

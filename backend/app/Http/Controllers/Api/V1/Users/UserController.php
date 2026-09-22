@@ -6,15 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Services\User\UserManagementService;
 use App\Helpers\ApiResponse;
 
+/**
+ * Manages user CRUD operations, role assignments, and status changes.
+ */
 class UserController extends Controller
 {
     protected UserManagementService $userService;
 
+    /**
+     * Create a new UserController instance.
+     *
+     * @param UserManagementService|null $userService User management service
+     */
     public function __construct(?UserManagementService $userService = null)
     {
         $this->userService = $userService ?? new UserManagementService();
     }
 
+    /**
+     * List all users for an organization with pagination.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData Request parameters including optional limit and offset
+     * @return array API response with list of users
+     */
     public function index(int $orgId, array $requestData): array
     {
         $limit = (int)($requestData['limit'] ?? 50);
@@ -23,6 +38,13 @@ class UserController extends Controller
         return ApiResponse::success($users, 'Users retrieved successfully', 200);
     }
 
+    /**
+     * Retrieve details of a specific user within an organization.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id User ID
+     * @return array API response with user details or error
+     */
     public function show(int $orgId, int $id): array
     {
         $user = $this->userService->getUser($id);
@@ -32,6 +54,16 @@ class UserController extends Controller
         return ApiResponse::success($user, 'User details retrieved', 200);
     }
 
+    /**
+     * Create a new user in an organization with role assignment.
+     *
+     * Prevents creation of Super Admin users and ensures email and first name are provided.
+     *
+     * @param int $orgId Organization ID
+     * @param array $requestData User data including email, first_name, and optional role_id
+     * @param int|null $performedBy User ID performing this action
+     * @return array API response with created user or error
+     */
     public function store(int $orgId, array $requestData, ?int $performedBy = null): array
     {
         if (empty($requestData['email']) || empty($requestData['first_name'])) {
@@ -54,6 +86,17 @@ class UserController extends Controller
         return ApiResponse::success($newUser, 'User created successfully', 201);
     }
 
+    /**
+     * Update an existing user with role and self-modification protection.
+     *
+     * Prevents users from changing their own role and from elevating anyone to Super Admin.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id User ID to update
+     * @param array $requestData Updated user data
+     * @param int|null $performedBy User ID performing this action
+     * @return array API response with updated user or error
+     */
     public function update(int $orgId, int $id, array $requestData, ?int $performedBy = null): array
     {
         $user = $this->userService->getUser($id);
@@ -77,6 +120,15 @@ class UserController extends Controller
         return ApiResponse::success($updated, 'User updated successfully', 200);
     }
 
+    /**
+     * Change the status of a user.
+     *
+     * @param int $orgId Organization ID
+     * @param int $id User ID
+     * @param array $requestData Status data including status value (active, inactive, locked)
+     * @param int|null $performedBy User ID performing this action
+     * @return array API response confirming status change or error
+     */
     public function setStatus(int $orgId, int $id, array $requestData, ?int $performedBy = null): array
     {
         $status = $requestData['status'] ?? '';

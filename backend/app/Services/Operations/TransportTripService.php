@@ -8,8 +8,22 @@ use App\Models\Vehicle;
 use Illuminate\Database\Capsule\Manager as DB;
 use Exception;
 
+/**
+ * Provides transport trip management including creation, passenger management, and updates.
+ */
 class TransportTripService
 {
+    /**
+     * Create a new transport trip with vehicle and driver validation.
+     *
+     * Validates vehicle availability, registration, insurance, and checks for
+     * overlapping trips for both vehicle and driver.
+     *
+     * @param int $orgId Organization ID
+     * @param array $data Trip data including vehicle_id, driver_employee_id, and trip_date
+     * @return TransportTrip The created transport trip
+     * @throws Exception If vehicle is unavailable, expired, or already booked
+     */
     public function createTrip(int $orgId, array $data): TransportTrip
     {
         return DB::transaction(function () use ($orgId, $data) {
@@ -62,6 +76,17 @@ class TransportTripService
         });
     }
 
+    /**
+     * Add a passenger to an active transport trip with capacity and duplicate checks.
+     *
+     * Validates trip status, vehicle capacity, and prevents duplicate passengers.
+     *
+     * @param int $orgId Organization ID
+     * @param int $tripId Trip ID
+     * @param array $data Passenger data including athlete_id, employee_id, or coach_id
+     * @return TransportPassenger The added passenger record
+     * @throws Exception If trip is inactive, capacity exceeded, or passenger already added
+     */
     public function addPassenger(int $orgId, int $tripId, array $data): TransportPassenger
     {
         return DB::transaction(function () use ($orgId, $tripId, $data) {
@@ -114,6 +139,18 @@ class TransportTripService
         });
     }
 
+    /**
+     * Update a transport trip and automatically record expenses when completed.
+     *
+     * When status changes to 'completed' and actual_cost is provided, automatically
+     * creates an expense record linked to the trip.
+     *
+     * @param int $orgId Organization ID
+     * @param int $tripId Trip ID
+     * @param array $data Updated trip data including optional status and actual_cost
+     * @return TransportTrip The updated transport trip
+     * @throws Exception If trip not found
+     */
     public function updateTrip(int $orgId, int $tripId, array $data): TransportTrip
     {
         return DB::transaction(function () use ($orgId, $tripId, $data) {

@@ -6,16 +6,36 @@ use App\Services\BaseService;
 use App\Services\Audit\AuditLogService;
 use PDO;
 
+/**
+ * Provides authentication services including login, logout, and token resolution.
+ */
 class AuthService extends BaseService
 {
     protected AuditLogService $auditLog;
 
+    /**
+     * Create a new AuthService instance.
+     *
+     * @param PDO|null $pdo Database connection
+     * @param AuditLogService|null $auditLog Audit logging service
+     */
     public function __construct(?PDO $pdo = null, ?AuditLogService $auditLog = null)
     {
         parent::__construct($pdo);
         $this->auditLog = $auditLog ?? new AuditLogService($this->pdo);
     }
 
+    /**
+     * Authenticate a user by email and password.
+     *
+     * Verifies credentials, resolves organization membership and role,
+     * applies permission overrides, and generates an HMAC-signed session token.
+     *
+     * @param string $email User email address
+     * @param string $password User password
+     * @param string|null $orgCode Optional organization code to filter membership
+     * @return array|null Session data including user, organization, role, permissions, and token; null on failure
+     */
     public function login(string $email, string $password, ?string $orgCode = null): ?array
     {
         if (!$this->pdo) {
@@ -186,6 +206,13 @@ class AuthService extends BaseService
         ];
     }
 
+    /**
+     * Log out a user and record the event in audit logs.
+     *
+     * @param int|null $userId The ID of the user logging out
+     * @param int|null $orgId The organization ID context
+     * @return bool Always returns true
+     */
     public function logout(?int $userId = null, ?int $orgId = null): bool
     {
         if ($userId) {
@@ -194,6 +221,15 @@ class AuthService extends BaseService
         return true;
     }
 
+    /**
+     * Resolve and validate a user session from an HMAC-signed token.
+     *
+     * Verifies token signature, checks expiration, loads user from database,
+     * and returns complete session context including organization, role, and permissions.
+     *
+     * @param string $token The HMAC-signed session token
+     * @return array|null User session data or null if token is invalid/expired
+     */
     public function resolveUserByToken(string $token): ?array
     {
         if (empty($token) || !str_contains($token, '.')) return null;

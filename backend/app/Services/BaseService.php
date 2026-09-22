@@ -5,10 +5,18 @@ namespace App\Services;
 use PDO;
 use Exception;
 
+/**
+ * Base service class providing database connection management and transaction support.
+ */
 abstract class BaseService
 {
     protected ?PDO $pdo = null;
 
+    /**
+     * Create a new service instance with database connection.
+     *
+     * @param PDO|null $pdo Optional PDO instance; if null, creates a new connection
+     */
     public function __construct(?PDO $pdo = null)
     {
         if ($pdo) {
@@ -18,6 +26,11 @@ abstract class BaseService
         }
     }
 
+    /**
+     * Get or create a singleton database connection.
+     *
+     * @return PDO|null The database connection or null on failure
+     */
     public static function getDatabaseConnection(): ?PDO
     {
         static $instance = null;
@@ -39,21 +52,41 @@ abstract class BaseService
         return $instance;
     }
 
+    /**
+     * Get the PDO database connection instance.
+     *
+     * @return PDO|null The database connection
+     */
     public function getPdo(): ?PDO
     {
         return $this->pdo;
     }
 
+    /**
+     * Begin a database transaction.
+     *
+     * @return bool True on success, false on failure
+     */
     public function beginTransaction(): bool
     {
         return $this->pdo && $this->pdo->beginTransaction();
     }
 
+    /**
+     * Commit the current database transaction.
+     *
+     * @return bool True on success, false on failure
+     */
     public function commit(): bool
     {
         return $this->pdo && $this->pdo->commit();
     }
 
+    /**
+     * Roll back the current database transaction.
+     *
+     * @return bool True on success, false on failure
+     */
     public function rollBack(): bool
     {
         return $this->pdo && $this->pdo->rollBack();
