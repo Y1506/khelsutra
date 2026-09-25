@@ -16,7 +16,7 @@ $navMenus = [
         ['key' => 'operations_venues', 'label' => 'Venues Admin', 'icon' => 'bi-geo-alt-fill', 'url' => '/operations/venues'],
         ['key' => 'bookings', 'label' => 'Facility Bookings', 'icon' => 'bi-calendar-plus', 'url' => '/operations/bookings'],
         ['key' => 'maintenance', 'label' => 'Maintenance', 'icon' => 'bi-tools', 'url' => '/operations/maintenance'],
-        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar2-star', 'url' => '/operations/events'],
+        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar-event', 'url' => '/operations/events'],
         ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bi-truck', 'url' => '/operations/transport'],
         ['key' => 'accommodation', 'label' => 'Accommodation', 'icon' => 'bi-building-fill-add', 'url' => '/operations/accommodation'],
         ['key' => 'inventory', 'label' => 'Inventory', 'icon' => 'bi-box-seam-fill', 'url' => '/inventory'],
@@ -70,7 +70,7 @@ $navMenus = [
     'venue_manager' => [
         ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'bi-house-door-fill', 'url' => '/dashboard'],
         ['key' => 'operations_venues', 'label' => 'Venues Admin', 'icon' => 'bi-geo-alt-fill', 'url' => '/operations/venues'],
-        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar2-star', 'url' => '/operations/events'],
+        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar-event', 'url' => '/operations/events'],
         ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bi-truck', 'url' => '/operations/transport'],
         ['key' => 'accommodation', 'label' => 'Accommodation', 'icon' => 'bi-building-fill-add', 'url' => '/operations/accommodation'],
         ['key' => 'bookings', 'label' => 'Facility Bookings', 'icon' => 'bi-calendar-plus', 'url' => '/operations/bookings'],
