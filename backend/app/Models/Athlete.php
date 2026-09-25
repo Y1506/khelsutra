@@ -58,12 +58,7 @@ class Athlete
         ];
     }
 
-    public function sports()
-    {
-        return $this->belongsToMany(\App\Models\Sport::class, 'athlete_sports', 'athlete_id', 'sport_id')
-            ->withPivot('organization_id')
-            ->withTimestamps();
-    }
+
 
     public function sports()
     {
