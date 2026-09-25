@@ -1,4 +1,9 @@
 <?php
+$activePage = 'operations_venues';
+$title = 'Venues Management — KhelSutra';
+ob_start();
+?>
+<?php
 $title = "Venues";
 $pageHeader = "Venues & Infrastructure";
 $pageSubheader = "Manage physical locations, stadiums, and training grounds.";
