@@ -14,7 +14,7 @@ trait BelongsToOrganization
         if (method_exists(static::class, 'addGlobalScope')) {
             static::addGlobalScope('organization', function ($builder) {
                 if (defined('CURRENT_ORGANIZATION_ID') && CURRENT_ORGANIZATION_ID !== null) {
-                    $builder->where('organization_id', CURRENT_ORGANIZATION_ID);
+                    $builder->where($builder->getModel()->getTable().'.organization_id', CURRENT_ORGANIZATION_ID);
                 }
             });
         }
@@ -33,6 +33,6 @@ trait BelongsToOrganization
      */
     public function scopeForOrganization($query, int $organizationId)
     {
-        return $query->where('organization_id', $organizationId);
+        return $query->where($this->getTable().'.organization_id', $organizationId);
     }
 }

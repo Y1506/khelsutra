@@ -18,7 +18,7 @@ $fmtStmt = $db->query("SELECT id, name FROM tournament_formats ORDER BY id ASC")
 $formats = $fmtStmt ? $fmtStmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
 // Venues
-$venueStmt = $db->prepare("SELECT id, name FROM venues WHERE organization_id = :org_id AND status = 'active' AND deleted_at IS NULL ORDER BY name ASC");
+$venueStmt = $db->prepare("SELECT v.id, v.name, GROUP_CONCAT(vs.sport_id) as sport_ids FROM venues v LEFT JOIN venue_sports vs ON v.id = vs.venue_id WHERE v.organization_id = :org_id AND v.status = 'active' AND v.deleted_at IS NULL GROUP BY v.id, v.name ORDER BY v.name ASC");
 $venueStmt->execute([':org_id' => $orgId]);
 $venues = $venueStmt ? $venueStmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
@@ -66,7 +66,7 @@ ob_start();
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold text-dark">Sport <span class="text-danger">*</span></label>
-                    <select name="sport_id" class="form-select" required style="font-size: 13px; border-radius: var(--ks-radius-button);">
+                    <select name="sport_id" id="sportSelect" class="form-select" required style="font-size: 13px; border-radius: var(--ks-radius-button);">
                         <option value="">Select sport</option>
                         <?php foreach ($sports as $s): ?>
                             <option value="<?= (int)$s['id'] ?>"><?= htmlspecialchars($s['name'], ENT_QUOTES, 'UTF-8') ?></option>
@@ -123,10 +123,10 @@ ob_start();
 
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold text-dark">Primary Venue <span class="text-danger">*</span></label>
-                    <select name="venue_id" class="form-select" required style="font-size: 13px; border-radius: var(--ks-radius-button);">
+                    <select name="venue_id" id="venueSelect" class="form-select" required style="font-size: 13px; border-radius: var(--ks-radius-button);">
                         <option value="">Select venue</option>
                         <?php foreach ($venues as $v): ?>
-                            <option value="<?= (int)$v['id'] ?>"><?= htmlspecialchars($v['name'], ENT_QUOTES, 'UTF-8') ?></option>
+                            <option value="<?= (int)$v['id'] ?>" data-sports="<?= htmlspecialchars($v['sport_ids'] ?? '', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($v['name'], ENT_QUOTES, 'UTF-8') ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -192,6 +192,55 @@ ob_start();
         </div>
     </form>
 </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sportSelect = document.getElementById('sportSelect');
+    const venueSelect = document.getElementById('venueSelect');
+    
+    if (sportSelect && venueSelect) {
+        // Clone all original options
+        const allOptions = Array.from(venueSelect.options).map(opt => opt.cloneNode(true));
+        
+        sportSelect.addEventListener('change', function() {
+            const selectedSport = this.value;
+            const currentSelectedVenue = venueSelect.value;
+            
+            // Clear current options
+            venueSelect.innerHTML = '';
+            
+            // Filter options
+            allOptions.forEach(opt => {
+                if (opt.value === '') {
+                    venueSelect.appendChild(opt.cloneNode(true)); // Add placeholder
+                } else {
+                    const sportsStr = opt.getAttribute('data-sports') || '';
+                    const sportsArr = sportsStr.split(',');
+                    
+                    // If no sport selected, or venue has no sports (assume general purpose), or venue has the sport
+                    if (!selectedSport || sportsStr === '' || sportsArr.includes(selectedSport)) {
+                        venueSelect.appendChild(opt.cloneNode(true));
+                    }
+                }
+            });
+            
+            // Try to restore previous selection if it's still available
+            let match = Array.from(venueSelect.options).find(opt => opt.value === currentSelectedVenue);
+            if (match) {
+                venueSelect.value = currentSelectedVenue;
+            } else {
+                venueSelect.value = '';
+            }
+        });
+        
+        // Trigger initial filter
+        const initialVenue = venueSelect.value;
+        sportSelect.dispatchEvent(new Event('change'));
+        if(initialVenue) venueSelect.value = initialVenue;
+    }
+});
+</script>
 
 <?php
 $slot = ob_get_clean();

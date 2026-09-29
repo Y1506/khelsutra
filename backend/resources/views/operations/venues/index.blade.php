@@ -1,31 +1,46 @@
 <?php
+$activePage = 'operations_venues';
+$title = 'Venues Management — KhelSutra';
+ob_start();
+?>
+<?php
 $title = "Venues";
 $pageHeader = "Venues & Infrastructure";
 $pageSubheader = "Manage physical locations, stadiums, and training grounds.";
 ob_start();
 ?>
 
-<!-- Action Bar -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex gap-2">
-        <div class="ks-search-container">
-            <i class="bi bi-search ks-search-icon"></i>
-            <input type="text" class="ks-form-control ks-search-input" placeholder="Search venues by name or code..." style="width: 250px;">
-        </div>
-        <select class="ks-form-select" style="width: 150px;">
-            <option>All Statuses</option>
-            <option>Active</option>
-            <option>Under Maintenance</option>
-            <option>Inactive</option>
-        </select>
+
+<div class="ks-page-header mb-4">
+    <div>
+        <h2 class="ks-page-title mb-1"><?= htmlspecialchars($pageHeader ?? 'Venues & Infrastructure') ?></h2>
+        <p class="ks-page-subtitle"><?= htmlspecialchars($pageSubheader ?? 'Manage physical locations, stadiums, and training grounds.') ?></p>
     </div>
-    <div class="d-flex gap-2">
-        <button class="ks-btn ks-btn-secondary">
-            <i class="bi bi-download me-1"></i> Export
-        </button>
-        <button class="ks-btn ks-btn-primary" data-bs-toggle="modal" data-bs-target="#newVenueModal">
-            <i class="bi bi-plus-lg me-1"></i> Add Venue
-        </button>
+</div>
+
+<div class="ks-filter-bar mb-4">
+    <div class="ks-filter-grid">
+        <div>
+            <div class="ks-search-container">
+                <i class="bi bi-search ks-search-icon" style="position: absolute; left: 12px; top: 11px; color: var(--ks-text-muted);"></i>
+                <input type="text" class="ks-form-control ks-search-input" id="filterSearch" placeholder="Search venues by name or code..." style="padding-left: 35px;" oninput="loadVenues()">
+            </div>
+        </div>
+        <div>
+            <select class="ks-form-select" id="filterStatus" onchange="loadVenues()">
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="under_maintenance">Under Maintenance</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <div style="flex: 0 0 auto !important; width: auto !important;">
+            <button class="ks-btn ks-btn-secondary w-100" onclick="document.getElementById('filterSearch').value=''; document.getElementById('filterStatus').value=''; loadVenues();"><i class="bi bi-x-circle"></i> Clear</button>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <button class="ks-btn ks-btn-secondary"><i class="bi bi-download me-1"></i> Export</button>
+            <button class="ks-btn ks-btn-primary" data-bs-toggle="modal" data-bs-target="#newVenueModal"><i class="bi bi-plus-lg me-1"></i> Add Venue</button>
+        </div>
     </div>
 </div>
 
@@ -143,8 +158,14 @@ function loadVenues() {
                                 </span>
                             </td>
                             <td style="text-align: right;">
-                                <a href="/operations/venues/${v.id}/facilities" class="ks-btn ks-btn-secondary" style="height: 32px; padding: 0 10px; font-size: 12px;">Facilities</a>
-                                <button onclick="deleteVenue(${v.id})" class="ks-btn ks-btn-secondary text-danger" style="height: 32px; padding: 0 10px; font-size: 12px;">Del</button>
+                                <div class="d-flex gap-1 justify-content-end">
+                                    <a href="/operations/venues/${v.id}/facilities" class="ks-btn ks-btn-sm ks-btn-secondary" title="Manage Facilities">
+                                        <i class="bi bi-grid"></i>
+                                    </a>
+                                    <button onclick="deleteVenue(${v.id})" class="ks-btn ks-btn-sm ks-btn-secondary text-danger" title="Delete Venue">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -189,3 +210,107 @@ function deleteVenue(id) {
 $slot = ob_get_clean();
 include __DIR__ . '/../../layouts/app.blade.php';
 ?>
+
+<script>
+// Auto-injected Context-Aware Dropdowns
+document.addEventListener('DOMContentLoaded', loadGlobalDropdowns);
+
+async function fetchDropdownData(url) {
+    try {
+        const res = await fetch(url).then(r => r.json());
+        if (res.data && res.data.data) return res.data.data;
+        if (res.data) return res.data;
+        return [];
+    } catch (e) {
+        console.error('Error fetching ' + url, e);
+        return [];
+    }
+}
+
+async function populateSelect(selector, url, labelFn) {
+    const select = document.querySelector(selector);
+    if (!select) return;
+    const defaultText = select.options[0] ? select.options[0].text : 'Select...';
+    select.innerHTML = '<option value="">Loading...</option>';
+    const data = await fetchDropdownData(url);
+    select.innerHTML = `<option value="">${defaultText}</option>`;
+    data.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = labelFn(item);
+        select.appendChild(opt);
+    });
+}
+
+async function loadGlobalDropdowns() {
+    const escapeHtml = typeof ksEscape === 'function' ? ksEscape : (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    
+    // Venues
+    const venueSels = ['#createVenue', '#createVenueHK', '#bookingVenue', '#eventVenue', '#activityVenue', '[name="venue_id"]'];
+    venueSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/venues?limit=100', v => escapeHtml(v.name));
+    });
+
+    // Employees
+    const empSels = ['#createEmployee', '#createEmployeeHK', '#eventOrganizer', '#vehicleDriver', '#tripDriver', '[name="organizer_employee_id"]', '#v_driver', '#pt_driver'];
+    empSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/employees?limit=200', e => escapeHtml((e.first_name || '') + ' ' + (e.last_name || '')).trim());
+    });
+
+    // Vendors
+    const vendorSels = ['#createVendor'];
+    vendorSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/vendors?limit=100', v => escapeHtml(v.vendor_name || v.name));
+    });
+
+    // Events
+    const eventSels = ['#bookingEvent', '#tripEvent', '#activityEvent', '#pt_event_id', '#bEventId', '[name="event_id"]'];
+    eventSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/events?limit=100', e => escapeHtml(e.name || e.event_reference));
+    });
+
+    // Teams
+    const teamSels = ['#bTeamId', '[name="team_id"]'];
+    teamSels.forEach(sel => {
+        populateSelect(sel, '/api/v2/teams?limit=100', t => escapeHtml(t.name || t.team_name || t.id)); // Using fallback endpoint if needed
+    });
+
+    // Tournaments
+    const tournSels = ['#bTournamentId', '[name="tournament_id"]'];
+    tournSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/tournaments?limit=100', t => escapeHtml(t.name || t.tournament_name || t.id)); 
+    });
+
+    // Cascading Facilities
+    const venueFacilityMap = [
+        ['#createVenue', '#createFacility'],
+        ['#createVenueHK', '#createFacilityHK'],
+        ['#bookingVenue', '#bookingFacility'],
+        ['#bVenueId', '#bFacilityId'],
+        ['[name="venue_id"]', '[name="facility_id"]']
+    ];
+    
+    for (const [vSel, fSel] of venueFacilityMap) {
+        const vSelect = document.querySelector(vSel);
+        const fSelect = document.querySelector(fSel);
+        if (vSelect && fSelect) {
+            vSelect.addEventListener('change', async (e) => {
+                const venueId = e.target.value;
+                if (!venueId) {
+                    fSelect.innerHTML = '<option value="">Select Facility...</option>';
+                    return;
+                }
+                fSelect.innerHTML = '<option value="">Loading...</option>';
+                const data = await fetchDropdownData(`/api/v1/venues/${venueId}/facilities`);
+                fSelect.innerHTML = '<option value="">Select Facility...</option>';
+                data.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.textContent = `${escapeHtml(f.name)} (${escapeHtml(f.facility_type)})`;
+                    fSelect.appendChild(opt);
+                });
+            });
+        }
+    }
+}
+</script>

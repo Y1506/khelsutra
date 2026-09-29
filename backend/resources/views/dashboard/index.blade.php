@@ -32,7 +32,7 @@ ob_start();
 
         <a href="/athletes/create" class="ks-btn ks-btn-primary">
             <i class="bi bi-plus-lg"></i>
-            <span>+ Add Athlete</span>
+            <span>Add Athlete</span>
         </a>
     </div>
 </div>

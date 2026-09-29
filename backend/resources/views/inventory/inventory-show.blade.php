@@ -30,6 +30,23 @@ ob_start();
             </a>
         </div>
 
+        <!-- Flash Alerts -->
+        <?php if (!empty($_GET['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show mb-4 py-2 px-3 small d-flex align-items-center gap-2" role="alert" style="border-radius: var(--ks-radius-button);">
+                <i class="bi bi-check-circle-fill text-success fs-6"></i>
+                <div><?= htmlspecialchars($_GET['success'], ENT_QUOTES, 'UTF-8') ?></div>
+                <button type="button" class="btn-close small p-2" data-bs-dismiss="alert" aria-label="Close" style="top: 50%; transform: translateY(-50%);"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($_GET['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show mb-4 py-2 px-3 small d-flex align-items-center gap-2" role="alert" style="border-radius: var(--ks-radius-button);">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
+                <div><?= htmlspecialchars($_GET['error'], ENT_QUOTES, 'UTF-8') ?></div>
+                <button type="button" class="btn-close small p-2" data-bs-dismiss="alert" aria-label="Close" style="top: 50%; transform: translateY(-50%);"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center gap-3">
                 <div style="width: 52px; height: 52px; border-radius: 12px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 22px;">
@@ -41,6 +58,11 @@ ob_start();
                         <span class="badge <?= ($item['status'] ?? 'active') === 'active' ? 'badge-success' : 'badge-secondary' ?>" style="border-radius: 12px; font-size: 11px; padding: 4px 10px; text-transform: capitalize;">
                             <?= htmlspecialchars($item['status'] ?? 'active', ENT_QUOTES, 'UTF-8') ?>
                         </span>
+                        <?php if (!empty($item['is_low_stock'])): ?>
+                            <span class="badge bg-danger-subtle text-danger" style="border-radius: 12px; font-size: 11px; padding: 4px 10px;">
+                                <i class="bi bi-exclamation-circle me-1"></i> Low Stock
+                            </span>
+                        <?php endif; ?>
                     </div>
                     <div class="text-muted small mt-1">
                         Code: <strong style="color: var(--ks-text);"><?= htmlspecialchars($item['item_code'] ?? '', ENT_QUOTES, 'UTF-8') ?></strong> &bull;
@@ -54,6 +76,11 @@ ob_start();
                 <a href="/inventory/<?= (int)$item['id'] ?>/edit" class="btn btn-primary d-inline-flex align-items-center gap-2" style="background: var(--ks-blue); border-color: var(--ks-blue); border-radius: var(--ks-radius-button); font-weight: 600; font-size: 13px; padding: 8px 18px;">
                     <i class="bi bi-pencil-square"></i> Edit Item
                 </a>
+                <form action="/inventory/<?= (int)$item['id'] ?>/delete" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete item \'<?= addslashes(htmlspecialchars($item['item_name'])) ?>\'?');">
+                    <button type="submit" class="btn btn-outline-danger d-inline-flex align-items-center gap-1" style="border-radius: var(--ks-radius-button); font-weight: 500; font-size: 13px; padding: 8px 14px;" title="Delete Item">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -68,7 +95,9 @@ ob_start();
                         </h5>
                         <div>
                             <span class="text-muted small">Current Level:</span>
-                            <strong class="fs-6 text-dark ms-1"><?= (float)($item['quantity'] ?? 0) ?> <?= htmlspecialchars($item['unit'] ?? '', ENT_QUOTES, 'UTF-8') ?></strong>
+                            <strong class="fs-6 <?= !empty($item['is_low_stock']) ? 'text-danger' : 'text-dark' ?> ms-1">
+                                <?= (float)($item['quantity'] ?? 0) ?> <?= htmlspecialchars($item['unit'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                            </strong>
                         </div>
                     </div>
 
@@ -79,16 +108,19 @@ ob_start();
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1">Transaction Type</label>
                                 <select name="transaction_type" class="form-select form-select-sm" required style="font-size: 12px;">
-                                    <option value="issue">Issue to Squad (-)</option>
-                                    <option value="return">Return from Squad (+)</option>
-                                    <option value="purchase">New Purchase (+)</option>
-                                    <option value="adjustment">Stock Adjustment (+)</option>
-                                    <option value="damage">Damaged / Written Off (-)</option>
+                                    <option value="purchase">Stock In: New Purchase (+)</option>
+                                    <option value="return">Stock In: Return from Squad (+)</option>
+                                    <option value="issue">Stock Out: Issue to Squad (-)</option>
+                                    <option value="damage">Stock Out: Damaged / Broken (-)</option>
+                                    <option value="loss">Stock Out: Lost / Missing (-)</option>
+                                    <option value="disposal">Stock Out: Written Off / Disposed (-)</option>
+                                    <option value="adjustment">Stock Adjustment (Increase +)</option>
+                                    <option value="adjustment_dec">Stock Adjustment (Decrease -)</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small text-muted mb-1">Quantity (<?= htmlspecialchars($item['unit'] ?? '', ENT_QUOTES, 'UTF-8') ?>)</label>
-                                <input type="number" step="1" name="quantity" class="form-control form-control-sm" min="1" value="1" required style="font-size: 12px;">
+                                <input type="number" step="0.01" name="quantity" class="form-control form-control-sm" min="0.01" value="1" required style="font-size: 12px;">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small text-muted mb-1">Remarks / Reference</label>
@@ -111,6 +143,7 @@ ob_start();
                                         <th>Date</th>
                                         <th>Movement</th>
                                         <th>Qty</th>
+                                        <th>Recorded By</th>
                                         <th>Remarks</th>
                                     </tr>
                                 </thead>
@@ -128,6 +161,9 @@ ob_start();
                                             </td>
                                             <td class="fw-bold <?= $isDeduct ? 'text-danger' : 'text-success' ?>">
                                                 <?= $isDeduct ? '-' : '+' ?><?= (float)$tx['quantity'] ?> <?= htmlspecialchars($item['unit'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                                            </td>
+                                            <td class="text-muted small">
+                                                <?= htmlspecialchars($tx['performer_name'] ?? 'Staff', ENT_QUOTES, 'UTF-8') ?>
                                             </td>
                                             <td class="text-muted small"><?= htmlspecialchars($tx['remarks'] ?: '—', ENT_QUOTES, 'UTF-8') ?></td>
                                         </tr>
@@ -174,24 +210,31 @@ ob_start();
                 </div>
 
                 <!-- Tracked Asset Units -->
-                <?php if (!empty($item['equipment_units']) && count($item['equipment_units']) > 0): ?>
-                    <div class="card p-4 mb-3" style="border: 1px solid var(--ks-border); border-radius: var(--ks-radius-card); background: #fff;">
-                        <h5 class="fw-bold mb-3" style="color: var(--ks-navy); font-size: 15px; border-bottom: 1px solid var(--ks-border-light); padding-bottom: 10px;">
+                <div class="card p-4 mb-3" style="border: 1px solid var(--ks-border); border-radius: var(--ks-radius-card); background: #fff;">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <h5 class="fw-bold mb-0" style="color: var(--ks-navy); font-size: 15px;">
                             <i class="bi bi-tag me-2" style="color: var(--ks-blue);"></i> Tracked Serial Assets
                         </h5>
+                        <a href="/equipment/create?inventory_item_id=<?= (int)$item['id'] ?>" class="btn btn-sm btn-outline-primary" style="font-size: 11px; padding: 3px 8px;">
+                            <i class="bi bi-plus-lg"></i> Add Unit
+                        </a>
+                    </div>
+                    <?php if (!empty($item['equipment_units']) && count($item['equipment_units']) > 0): ?>
                         <div class="d-flex flex-column gap-2">
                             <?php foreach ($item['equipment_units'] as $eq): ?>
-                                <div class="d-flex align-items-center justify-content-between p-2 border rounded" style="background: var(--ks-page-bg);">
+                                <a href="/equipment/<?= (int)$eq['id'] ?>" class="d-flex align-items-center justify-content-between p-2 border rounded text-decoration-none" style="background: var(--ks-page-bg);">
                                     <div>
                                         <div class="fw-semibold text-dark small"><?= htmlspecialchars($eq['asset_code'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
                                         <span class="text-muted" style="font-size: 11px;">Condition: <?= htmlspecialchars(ucfirst($eq['condition_status'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
                                     </div>
                                     <span class="badge bg-light text-secondary border small"><?= htmlspecialchars($eq['status'] ?? '', ENT_QUOTES, 'UTF-8') ?></span>
-                                </div>
+                                </a>
                             <?php endforeach; ?>
                         </div>
-                    </div>
-                <?php endif; ?>
+                    <?php else: ?>
+                        <p class="text-muted small mb-0">No individual units tracked for this item yet.</p>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     <?php endif; ?>

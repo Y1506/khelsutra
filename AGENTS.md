@@ -83,8 +83,8 @@ git checkout -b feature/operations-logistics   # or checkout if it exists
 ```
 
 - Never push to `main`; never commit directly to `develop`. PR against `develop`.
-- **No committing until I confirm** (in case of any bugs or visual glitches).
-- **No pushing to remote until I confirm** (for the same reason as above).
+- **Local commits are allowed** without explicit confirmation, provided they follow semantic commit guidelines.
+- **No pushing to remote until I explicitly confirm.** After making local commits, the agent must display a final summary of the commits and explicitly ask "Would you like me to push these changes?" before running `git push`.
 - **Semantic commits, small and frequent:** `feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `chore:` (e.g. `feat: implement venue booking`, `test: add venue and logistics tests`).
 - One commit per logical unit (Docker, delta migration, model+service, controller+routes, tests).
 

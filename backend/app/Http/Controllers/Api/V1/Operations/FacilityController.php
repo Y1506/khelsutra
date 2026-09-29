@@ -22,7 +22,13 @@ class FacilityController
         $venue = Venue::where('organization_id', $orgId)->find($venueId);
         if (!$venue) return ApiResponse::error('Venue not found', null, 404);
 
-        $facilities = Facility::where('organization_id', $orgId)->where('venue_id', $venueId)->get();
+        $query = Facility::where('organization_id', $orgId)->where('venue_id', $venueId);
+        
+        if (!empty($requestData['sport_id'])) {
+            $query->forSport((int)$requestData['sport_id']);
+        }
+
+        $facilities = $query->get();
         return ApiResponse::success(['data' => $facilities->toArray()]);
     }
 

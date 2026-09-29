@@ -1,10 +1,14 @@
 <?php
+$activePage = 'accommodation';
+$title = 'Accommodation Management — KhelSutra';
 ob_start();
 ?>
 <div class="ks-page-header mb-4">
-    <div class="ks-header-left">
-        <h2 class="ks-page-title"><i class="bi bi-buildings" style="color:var(--ks-primary); margin-right:8px;"></i> Accommodation Management</h2>
-        <p class="ks-page-subtitle">Manage lodging facilities and room allocations for athletes and staff</p>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="ks-page-title mb-1">Accommodation Management</h2>
+            <p class="ks-page-subtitle mb-0">Manage lodging facilities and room allocations for athletes and staff</p>
+        </div>
     </div>
 </div>
 
@@ -46,13 +50,13 @@ ob_start();
 
 <div class="ks-filter-bar mb-3">
     <div class="ks-filter-grid">
-        <input type="text" class="ks-form-control" id="filterSearch" placeholder="Search accommodation..." oninput="loadData()">
-        <select class="ks-form-select" id="filterStatus" onchange="loadData()">
+        <div><input type="text" class="ks-form-control" id="filterSearch" placeholder="Search accommodation..." oninput="loadData()"></div>
+        <div><select class="ks-form-select" id="filterStatus" onchange="loadData()">
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
-        </select>
-        <button class="ks-btn ks-btn-secondary" onclick="clearFilters()"><i class="bi bi-x-circle"></i> Clear</button>
+        </select></div>
+        <div><button class="ks-btn ks-btn-secondary w-100" onclick="clearFilters()"><i class="bi bi-x-circle"></i> Clear</button></div>
         <div class="ms-auto">
             <button class="ks-btn ks-btn-primary" onclick="openCreateModal()"><i class="bi bi-plus-lg"></i> Add Accommodation</button>
         </div>
@@ -552,3 +556,107 @@ async function addRoom() {
 $slot = ob_get_clean();
 include __DIR__ . '/../../layouts/app.blade.php';
 ?>
+
+<script>
+// Auto-injected Context-Aware Dropdowns
+document.addEventListener('DOMContentLoaded', loadGlobalDropdowns);
+
+async function fetchDropdownData(url) {
+    try {
+        const res = await fetch(url).then(r => r.json());
+        if (res.data && res.data.data) return res.data.data;
+        if (res.data) return res.data;
+        return [];
+    } catch (e) {
+        console.error('Error fetching ' + url, e);
+        return [];
+    }
+}
+
+async function populateSelect(selector, url, labelFn) {
+    const select = document.querySelector(selector);
+    if (!select) return;
+    const defaultText = select.options[0] ? select.options[0].text : 'Select...';
+    select.innerHTML = '<option value="">Loading...</option>';
+    const data = await fetchDropdownData(url);
+    select.innerHTML = `<option value="">${defaultText}</option>`;
+    data.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = labelFn(item);
+        select.appendChild(opt);
+    });
+}
+
+async function loadGlobalDropdowns() {
+    const escapeHtml = typeof ksEscape === 'function' ? ksEscape : (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    
+    // Venues
+    const venueSels = ['#createVenue', '#createVenueHK', '#bookingVenue', '#eventVenue', '#activityVenue', '[name="venue_id"]'];
+    venueSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/venues?limit=100', v => escapeHtml(v.name));
+    });
+
+    // Employees
+    const empSels = ['#createEmployee', '#createEmployeeHK', '#eventOrganizer', '#vehicleDriver', '#tripDriver', '[name="organizer_employee_id"]', '#v_driver', '#pt_driver'];
+    empSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/employees?limit=200', e => escapeHtml((e.first_name || '') + ' ' + (e.last_name || '')).trim());
+    });
+
+    // Vendors
+    const vendorSels = ['#createVendor'];
+    vendorSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/vendors?limit=100', v => escapeHtml(v.vendor_name || v.name));
+    });
+
+    // Events
+    const eventSels = ['#bookingEvent', '#tripEvent', '#activityEvent', '#pt_event_id', '#bEventId', '[name="event_id"]'];
+    eventSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/events?limit=100', e => escapeHtml(e.name || e.event_reference));
+    });
+
+    // Teams
+    const teamSels = ['#bTeamId', '[name="team_id"]'];
+    teamSels.forEach(sel => {
+        populateSelect(sel, '/api/v2/teams?limit=100', t => escapeHtml(t.name || t.team_name || t.id)); // Using fallback endpoint if needed
+    });
+
+    // Tournaments
+    const tournSels = ['#bTournamentId', '[name="tournament_id"]'];
+    tournSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/tournaments?limit=100', t => escapeHtml(t.name || t.tournament_name || t.id)); 
+    });
+
+    // Cascading Facilities
+    const venueFacilityMap = [
+        ['#createVenue', '#createFacility'],
+        ['#createVenueHK', '#createFacilityHK'],
+        ['#bookingVenue', '#bookingFacility'],
+        ['#bVenueId', '#bFacilityId'],
+        ['[name="venue_id"]', '[name="facility_id"]']
+    ];
+    
+    for (const [vSel, fSel] of venueFacilityMap) {
+        const vSelect = document.querySelector(vSel);
+        const fSelect = document.querySelector(fSel);
+        if (vSelect && fSelect) {
+            vSelect.addEventListener('change', async (e) => {
+                const venueId = e.target.value;
+                if (!venueId) {
+                    fSelect.innerHTML = '<option value="">Select Facility...</option>';
+                    return;
+                }
+                fSelect.innerHTML = '<option value="">Loading...</option>';
+                const data = await fetchDropdownData(`/api/v1/venues/${venueId}/facilities`);
+                fSelect.innerHTML = '<option value="">Select Facility...</option>';
+                data.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.textContent = `${escapeHtml(f.name)} (${escapeHtml(f.facility_type)})`;
+                    fSelect.appendChild(opt);
+                });
+            });
+        }
+    }
+}
+</script>

@@ -63,6 +63,22 @@ class VenueAvailabilityService
             }
         }
 
+                // Check Maintenance block
+        $maintenance = \App\Models\VenueMaintenance::where('organization_id', $orgId)
+            ->where('venue_id', $venueId)
+            ->where(function($q) use ($facilityId) {
+                if ($facilityId) {
+                    $q->whereNull('facility_id')->orWhere('facility_id', $facilityId);
+                }
+            })
+            ->whereNotIn('status', ['completed', 'cancelled']) // assume these are the terminal states
+            ->where('scheduled_date', $date) // simple assumption for maintenance blocking day
+            ->first();
+
+        if ($maintenance) {
+            return ['available' => false, 'conflict' => 'Venue/Facility is under maintenance on this date.'];
+        }
+
         // Build overlap query
         $query = VenueBooking::where('organization_id', $orgId)
             ->where('venue_id', $venueId)

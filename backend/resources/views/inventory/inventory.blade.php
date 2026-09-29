@@ -29,6 +29,15 @@ ob_start();
             <h1 class="h3 fw-bold mb-0" style="color: var(--ks-navy); letter-spacing: -0.02em;">Inventory</h1>
         </div>
         <div class="d-flex gap-2">
+            <a href="/equipment" class="btn btn-outline-primary d-inline-flex align-items-center gap-2" style="border-radius: var(--ks-radius-button); font-weight: 600; font-size: 13px; padding: 9px 16px;">
+                <i class="bi bi-tag-fill"></i> Tracked Equipment
+            </a>
+            <a href="/vendors" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: var(--ks-radius-button); font-weight: 600; font-size: 13px; padding: 9px 16px;">
+                <i class="bi bi-truck"></i> Vendors
+            </a>
+            <a href="/inventory/categories" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: var(--ks-radius-button); font-weight: 600; font-size: 13px; padding: 9px 16px;">
+                <i class="bi bi-tags"></i> Manage Categories
+            </a>
             <a href="/inventory/create" class="btn btn-primary d-inline-flex align-items-center gap-2" style="background: var(--ks-blue); border-color: var(--ks-blue); border-radius: var(--ks-radius-button); font-weight: 600; font-size: 13px; padding: 9px 18px;">
                 <i class="bi bi-plus-lg"></i> Add Item
             </a>
@@ -59,6 +68,7 @@ ob_start();
                     <option value="">All Statuses</option>
                     <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Active</option>
                     <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                    <option value="low_stock" <?= $status === 'low_stock' ? 'selected' : '' ?>>Low Stock Alert</option>
                 </select>
             </div>
             <div class="col-md-2 d-flex gap-2">
@@ -136,9 +146,14 @@ ob_start();
                                         <a href="/inventory/<?= (int)$item['id'] ?>" class="btn btn-outline-secondary" style="border-radius: 6px 0 0 6px;" title="View Details & Movement">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="/inventory/<?= (int)$item['id'] ?>/edit" class="btn btn-outline-secondary" style="border-radius: 0 6px 6px 0;" title="Edit Item">
+                                        <a href="/inventory/<?= (int)$item['id'] ?>/edit" class="btn btn-outline-secondary" style="border-radius: 0;" title="Edit Item">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        <form action="/inventory/<?= (int)$item['id'] ?>/delete" method="POST" style="display: contents;" class="d-inline" onsubmit="return confirm('Are you sure you want to delete \'<?= addslashes(htmlspecialchars($item['item_name'])) ?>\'?');">
+                                            <button type="submit" class="btn btn-outline-danger" style="border-radius: 0 6px 6px 0; border-left: 0; padding: 4px 8px; font-size: 12px;" title="Delete Item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

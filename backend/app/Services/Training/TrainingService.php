@@ -72,7 +72,7 @@ class TrainingService extends BaseService
             LEFT JOIN employees e ON cp.employee_id = e.id
             LEFT JOIN training_attendance ta ON ts.id = ta.training_session_id
             WHERE {$whereClause}
-            GROUP BY ts.id
+            GROUP BY ts.id, t.name, s.name, v.name, vf.name, e.first_name, e.last_name
             ORDER BY ts.training_date DESC, ts.start_time DESC
             LIMIT :limit OFFSET :offset
         ";

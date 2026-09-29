@@ -98,6 +98,20 @@ KhelSutra/
 
 ---
 
+
+### Logistics Automation & Scheduling
+*   `GET /api/v1/context/{type}/{id}` - Resolve logistics context for tournaments, events, or fixtures
+*   `GET /api/v1/{resource}/{id}/audit` - Fetch full audit history for Bookings, Trips, and Allocations
+*   `GET /api/v1/calendar/resources` - Unified resource timeline API mapping bookings, trips, and allocations
+*   `GET /api/v1/scheduling/clashes` - Report double-bookings and scheduling conflicts
+
+**Idempotency**
+POST requests in the Operations module support the optional `Idempotency-Key` header to safely retry network failures without duplicating records.
+
+**Scheduler Setup (Required)**
+To process waitlists, auto-turnover tasks, and compliance warnings, add the following to your crontab:
+`* * * * * cd /home/y1506/Documents/Programming/Projects/khelsutra/backend && php artisan schedule:run >> /dev/null 2>&1`
+
 ## 6. User Roles
 The platform operates on 7 predefined roles:
 1. **Super Admin**: Software provider admin with global multi-organization access.
@@ -270,3 +284,10 @@ Division of responsibility across our team of 5 developers:
 - **Member 3**: Tournaments, Fixtures, Matches, Venues, Events.
 - **Member 4**: HR, Staff, Payroll, Inventory, Equipment, Finance, Budgets.
 - **Member 5**: Flutter mobile app, API client integration, Notifications, UX.
+
+## API Reference Updates
+
+*   `GET /api/v1/venues?sport_id={id}` - Filter venues by supported sport
+*   `GET /api/v1/facilities?sport_id={id}` - Filter facilities by supported sport
+*   `POST /api/v1/trips/auto-plan` - Dry-run vehicle auto-assignment algorithm
+*   `POST /api/v1/trips` - Pass `auto_assign=true` to automatically allocate optimal vehicles for a group

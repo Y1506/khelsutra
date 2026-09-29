@@ -23,12 +23,12 @@ ob_start();
 
 <div class="ks-content">
     <!-- Clean Page Header Standard -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="ks-page-header mb-4">
         <div>
-            <h1 class="h3 fw-bold mb-0" style="color: var(--ks-navy); letter-spacing: -0.02em;">Tournaments</h1>
+            <h1 class="ks-page-title">Tournaments</h1>
         </div>
-        <div class="d-flex gap-2">
-            <a href="/tournaments/create" class="btn btn-primary d-inline-flex align-items-center gap-2" style="background: var(--ks-blue); border-color: var(--ks-blue); border-radius: var(--ks-radius-button); font-weight: 600; font-size: 13px; padding: 9px 18px;">
+        <div class="ks-header-actions">
+            <a href="/tournaments/create" class="ks-btn ks-btn-primary">
                 <i class="bi bi-plus-lg"></i> Create Tournament
             </a>
         </div>
@@ -36,8 +36,8 @@ ob_start();
 
     <!-- Search & Filters Toolbar -->
     <div class="card p-3 mb-4" style="border: 1px solid var(--ks-border); border-radius: var(--ks-radius-card); background: #fff;">
-        <form method="GET" action="/tournaments" class="row g-2 align-items-center">
-            <div class="col-md-5">
+        <form method="GET" action="/tournaments" class="ks-filter-grid">
+            <div>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0" style="border-color: var(--ks-border); border-radius: var(--ks-radius-button) 0 0 var(--ks-radius-button);">
                         <i class="bi bi-search text-muted" style="font-size: 13px;"></i>
@@ -45,7 +45,7 @@ ob_start();
                     <input type="text" name="search" class="form-control border-start-0" placeholder="Search tournament name, code, organizer..." value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" style="border-color: var(--ks-border); border-radius: 0 var(--ks-radius-button) var(--ks-radius-button) 0; font-size: 13px;">
                 </div>
             </div>
-            <div class="col-md-3">
+            <div>
                 <select name="sport_id" class="form-select" style="border-color: var(--ks-border); border-radius: var(--ks-radius-button); font-size: 13px;">
                     <option value="">All Sports</option>
                     <?php foreach ($sports as $sp): ?>
@@ -53,7 +53,7 @@ ob_start();
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div>
                 <select name="status" class="form-select" style="border-color: var(--ks-border); border-radius: var(--ks-radius-button); font-size: 13px;">
                     <option value="">All Statuses</option>
                     <option value="draft" <?= $status === 'draft' ? 'selected' : '' ?>>Draft</option>
@@ -62,12 +62,12 @@ ob_start();
                     <option value="completed" <?= $status === 'completed' ? 'selected' : '' ?>>Completed</option>
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1" style="background: var(--ks-blue); border-color: var(--ks-blue); border-radius: var(--ks-radius-button); font-weight: 500; font-size: 13px;">
+            <div>
+                <button type="submit" class="btn ks-btn ks-btn-primary" style="background: var(--ks-blue); border-color: var(--ks-blue); border-radius: var(--ks-radius-button); font-weight: 500; font-size: 13px;">
                     Filter
                 </button>
                 <?php if ($search || $sportId || $status): ?>
-                    <a href="/tournaments" class="btn btn-outline-secondary" style="border-radius: var(--ks-radius-button); font-size: 13px;" title="Reset filters">
+                    <a href="/tournaments" class="ks-btn ks-btn-secondary" style="border-radius: var(--ks-radius-button); font-size: 13px;" title="Reset filters">
                         <i class="bi bi-x-lg"></i>
                     </a>
                 <?php endif; ?>
@@ -139,13 +139,13 @@ ob_start();
                                 </td>
                                 <td class="py-3 px-3 text-end">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="/tournaments/<?= (int)$tourn['id'] ?>" class="btn btn-outline-secondary" style="border-radius: 6px 0 0 6px;" title="View Tournament & Fixtures">
+                                        <a href="/tournaments/<?= (int)$tourn['id'] ?>" class="ks-btn ks-btn-secondary" style="border-radius: 6px 0 0 6px;" title="View Tournament & Fixtures">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="/tournaments/<?= (int)$tourn['id'] ?>/edit" class="btn btn-outline-secondary" style="border-radius: 0;" title="Edit Tournament">
+                                        <a href="/tournaments/<?= (int)$tourn['id'] ?>/edit" class="ks-btn ks-btn-secondary" style="border-radius: 0;" title="Edit Tournament">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="/tournaments/<?= (int)$tourn['id'] ?>/delete" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this tournament? This action marks the tournament as deleted.');">
+                                        <form action="/tournaments/<?= (int)$tourn['id'] ?>/delete" method="POST" style="display: contents;" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this tournament? This action marks the tournament as deleted.');">
                                             <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: 0 6px 6px 0; border-left: 0;" title="Delete Tournament">
                                                 <i class="bi bi-trash"></i>
                                             </button>

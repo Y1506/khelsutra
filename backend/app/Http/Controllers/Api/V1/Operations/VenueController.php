@@ -23,6 +23,11 @@ class VenueController
         $offset = ($page - 1) * $limit;
 
         $query = Venue::where('organization_id', $orgId);
+        
+        if (!empty($requestData['sport_id'])) {
+            $query->forSport((int)$requestData['sport_id']);
+        }
+
         $total = $query->count();
         $venues = $query->offset($offset)->limit($limit)->get();
 

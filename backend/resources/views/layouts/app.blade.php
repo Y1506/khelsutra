@@ -14,7 +14,25 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- KhelSutra Master Design System Stylesheet with Cache Busting -->
     <link rel="stylesheet" href="/assets/css/khelsutra-design-system.css?v=<?= @filemtime(dirname(__DIR__, 3) . '/public/assets/css/khelsutra-design-system.css') ?: time() ?>">
+
+    <!-- Idempotency Token for Operations Module -->
+    <meta name="idempotency-token" content="<?= bin2hex(random_bytes(16)) ?>">
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = async function() {
+            let [resource, config] = arguments;
+            if(config && config.method && config.method.toUpperCase() === 'POST' && resource.includes('/api/v1/')) {
+                config.headers = config.headers || {};
+                if(!config.headers['Idempotency-Key']) {
+                    const token = document.querySelector('meta[name="idempotency-token"]')?.content;
+                    if(token) config.headers['Idempotency-Key'] = token;
+                }
+            }
+            return originalFetch(resource, config);
+        };
+    </script>
 </head>
+
 <body>
     <div class="ks-app-layout">
         <!-- Sidebar Component -->
@@ -121,5 +139,48 @@
             }
         });
     </script>
+
+<script>
+// Global fix for HTML5 Date/Time validation messages
+document.addEventListener('DOMContentLoaded', function() {
+    function attachDateValidationFix() {
+        document.querySelectorAll('input[type="date"], input[type="time"], input[type="month"]').forEach(input => {
+            input.removeEventListener('invalid', handleInvalidDate);
+            input.removeEventListener('input', handleDateInput);
+            
+            input.addEventListener('invalid', handleInvalidDate);
+            input.addEventListener('input', handleDateInput);
+        });
+    }
+
+    function handleInvalidDate(e) {
+        if (this.validity.badInput) {
+            this.setCustomValidity('Please enter a valid, complete date/time. (e.g. Nov 30 instead of Nov 31)');
+        } else if (this.validity.valueMissing) {
+            this.setCustomValidity('This date/time field is required.');
+        }
+    }
+
+    function handleDateInput(e) {
+        this.setCustomValidity(''); 
+    }
+
+    attachDateValidationFix();
+
+    // Re-attach if DOM changes (e.g. new modals loaded dynamically)
+    const observer = new MutationObserver((mutations) => {
+        let shouldAttach = false;
+        mutations.forEach(m => {
+            if (m.addedNodes && m.addedNodes.length > 0) {
+                shouldAttach = true;
+            }
+        });
+        if (shouldAttach) attachDateValidationFix();
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+</script>
 </body>
+
 </html>

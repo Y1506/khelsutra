@@ -41,8 +41,24 @@ class OperationsPermissionHelper
         $perms = self::getPermissions($action);
         if (empty($perms)) return false;
 
-        // Note: In real application, this would call Member 1's authorization service.
-        // Assuming $user->hasAnyPermission($perms) exists in Member 1 code.
-        return true; 
+        $user = $_SESSION['auth']['user'] ?? null;
+        if (!$user) return false;
+
+        // Super Admin (1) or Sports Administrator (2) have global access
+        $roleId = isset($user['role_id']) ? (int)$user['role_id'] : ($_SESSION['auth']['role']['id'] ?? 0);
+        if ($roleId === 1 || $roleId === 2) {
+            return true;
+        }
+
+        $userPermissions = $_SESSION['auth']['permissions'] ?? [];
+        
+        // Check if the user has ANY of the required permissions
+        foreach ($perms as $perm) {
+            if (in_array($perm, $userPermissions, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

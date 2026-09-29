@@ -63,7 +63,7 @@ class TeamService extends BaseService
             LEFT JOIN coach_profiles cp ON tc.coach_id = cp.id
             LEFT JOIN employees e ON cp.employee_id = e.id
             WHERE {$whereClause}
-            GROUP BY t.id
+            GROUP BY t.id, s.name, e.first_name, e.last_name, cp.id
             ORDER BY t.id DESC
             LIMIT :limit OFFSET :offset
         ";

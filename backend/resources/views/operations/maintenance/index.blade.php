@@ -1,12 +1,33 @@
-<?php ob_start(); ?>
+<?php
+$pageTitle = 'Facilities & Maintenance — KhelSutra';
+$activePage = 'maintenance';
+ob_start();
+?>
 
-<div class="ks-page-header">
-    <div class="ks-header-left">
-        <h1 class="ks-page-title">Maintenance Management</h1>
-        <p class="ks-page-subtitle">Track and resolve venue maintenance issues and work orders</p>
+<div class="ks-page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="ks-page-title mb-1">Facilities & Maintenance</h2>
+            <p class="ks-page-subtitle">Track venue maintenance issues and schedule housekeeping tasks</p>
+        </div>
     </div>
 </div>
 
+<ul class="nav nav-tabs ks-nav-tabs mb-4" id="facilityTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="maintenance-tab" data-bs-toggle="tab" data-bs-target="#maintenance-pane" type="button" role="tab" aria-controls="maintenance-pane" aria-selected="true">
+            <i class="bi bi-tools me-2"></i> Maintenance Tickets
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="housekeeping-tab" data-bs-toggle="tab" data-bs-target="#housekeeping-pane" type="button" role="tab" aria-controls="housekeeping-pane" aria-selected="false">
+            <i class="bi bi-brush me-2"></i> Housekeeping Tasks
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="facilityTabsContent">
+    <div class="tab-pane fade show active" id="maintenance-pane" role="tabpanel" aria-labelledby="maintenance-tab" tabindex="0">
 <div class="row g-3 mb-4">
     <div class="col-xl-3 col-md-6">
         <div class="ks-kpi-card">
@@ -41,6 +62,7 @@
         </div>
     </div>
 </div>
+
 
 <div class="ks-filter-bar mb-3">
     <div class="ks-filter-grid">
@@ -94,8 +116,106 @@
     </div>
 </div>
 
-<!-- Complete Modal -->
-<div class="modal fade" id="completeModal" tabindex="-1">
+
+    </div>
+
+    <div class="tab-pane fade" id="housekeeping-pane" role="tabpanel" aria-labelledby="housekeeping-tab" tabindex="0">
+<div class="row g-3 mb-4">
+    <div class="col-xl-4 col-md-4">
+        <div class="ks-kpi-card">
+            <div class="ks-kpi-top">
+                <div class="ks-icon-box ks-icon-amber"><i class="bi bi-hourglass-split"></i></div>
+                <div><div class="ks-kpi-label">PENDING TASKS</div><div class="ks-kpi-value" id="kpi-pending">—</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-4">
+        <div class="ks-kpi-card">
+            <div class="ks-kpi-top">
+                <div class="ks-icon-box ks-icon-blue"><i class="bi bi-arrow-clockwise"></i></div>
+                <div><div class="ks-kpi-label">IN PROGRESS</div><div class="ks-kpi-value" id="kpi-progress">—</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-4">
+        <div class="ks-kpi-card">
+            <div class="ks-kpi-top">
+                <div class="ks-icon-box ks-icon-green"><i class="bi bi-check-circle-fill"></i></div>
+                <div><div class="ks-kpi-label">COMPLETED TODAY</div><div class="ks-kpi-value" id="kpi-completed">—</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="ks-filter-bar mb-3">
+    <div class="ks-filter-grid">
+        <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="dateFilter" id="dateToday" autocomplete="off" value="today" onchange="loadHousekeeping()">
+            <label class="btn btn-outline-primary" for="dateToday">Today</label>
+            
+            <input type="radio" class="btn-check" name="dateFilter" id="dateUpcoming" autocomplete="off" value="upcoming" onchange="loadHousekeeping()">
+            <label class="btn btn-outline-primary" for="dateUpcoming">Upcoming</label>
+            
+            <input type="radio" class="btn-check" name="dateFilter" id="dateAll" autocomplete="off" value="all" checked onchange="loadHousekeeping()">
+            <label class="btn btn-outline-primary" for="dateAll">All</label>
+        </div>
+
+        <input type="text" class="ks-form-control" id="filterSearchHK" placeholder="Search..." oninput="loadHousekeeping()">
+        <select class="ks-form-select" id="filterPriorityHK" onchange="loadHousekeeping()">
+            <option value="">All Priorities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+        </select>
+        <select class="ks-form-select" id="filterStatusHK" onchange="loadHousekeeping()">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="assigned">Assigned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+        </select>
+        <button class="ks-btn ks-btn-secondary" onclick="clearFiltersHK()"><i class="bi bi-x-circle"></i> Clear</button>
+    </div>
+</div>
+
+<div class="ks-content-card">
+    <div class="ks-card-header">
+        <div class="ks-header-left">
+            <i class="bi bi-stars" style="color:var(--ks-primary);font-size:18px;"></i>
+            <h3 class="ks-header-title">Housekeeping Tasks</h3>
+            <span class="ks-badge ks-badge-scheduled ms-2" id="total-count">0</span>
+        </div>
+        <button class="ks-btn ks-btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+            <i class="bi bi-plus-lg"></i> Create Task
+        </button>
+    </div>
+    <div class="ks-table-responsive">
+        <table class="ks-table">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Task Type</th>
+                    <th>Scheduled Date</th>
+                    <th>Priority</th>
+                    <th>Assigned Employee</th>
+                    <th>Status</th>
+                    <th>Quick Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBodyHK">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+    </div>
+</div>
+
+<!-- Complete Modal --><div class="modal fade" id="completeModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: var(--ks-radius-modal); border: 1px solid var(--ks-border); box-shadow: var(--ks-shadow-modal);">
             <div class="modal-header">
@@ -153,19 +273,27 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Venue ID <span class="text-danger">*</span></label>
-                            <input type="number" class="ks-form-control" id="createVenue" required>
+                            <select class="ks-form-control" id="createVenue" required>
+<option value="">Select Venue...</option>
+</select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Facility ID</label>
-                            <input type="number" class="ks-form-control" id="createFacility">
+                            <select class="ks-form-control" id="createFacility">
+<option value="">Select Facility...</option>
+</select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Assigned Employee ID</label>
-                            <input type="number" class="ks-form-control" id="createEmployee">
+                            <select class="ks-form-control" id="createEmployee">
+<option value="">Select Employee...</option>
+</select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Assigned Vendor ID</label>
-                            <input type="number" class="ks-form-control" id="createVendor">
+                            <select class="ks-form-control" id="createVendor">
+<option value="">Select Vendor...</option>
+</select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Scheduled Date <span class="text-danger">*</span></label>
@@ -193,8 +321,80 @@
         </div>
     </div>
 </div>
+<!-- Create Task Modal --><div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: var(--ks-radius-modal); border: 1px solid var(--ks-border); box-shadow: var(--ks-shadow-modal);">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Housekeeping Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createFormHK" onsubmit="event.preventDefault(); submitCreateTask();">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Task Type <span class="text-danger">*</span></label>
+                            <input type="text" class="ks-form-control" id="createTypeHK" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Priority <span class="text-danger">*</span></label>
+                            <select class="ks-form-select" id="createPriorityHK" required>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Venue ID <span class="text-danger">*</span></label>
+                            <select class="ks-form-control" id="createVenueHK" required>
+<option value="">Select Venue...</option>
+</select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Facility ID</label>
+                            <select class="ks-form-control" id="createFacilityHK">
+<option value="">Select Facility...</option>
+</select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Assigned Employee ID</label>
+                            <select class="ks-form-control" id="createEmployeeHK">
+<option value="">Select Employee...</option>
+</select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Scheduled Date <span class="text-danger">*</span></label>
+                            <input type="date" class="ks-form-control" id="createDateHK" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" class="ks-form-control" id="createStartHK">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">End Time</label>
+                            <input type="time" class="ks-form-control" id="createEndHK">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="ks-form-control" id="createDescHK" rows="3"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Remarks</label>
+                            <textarea class="ks-form-control" id="createRemarksHK" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="ks-btn ks-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="createFormHK" class="ks-btn ks-btn-primary">Create Task</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
+
 let currentCompleteModal = null;
 let currentCreateModal = null;
 
@@ -426,9 +626,330 @@ async function submitCreateTicket() {
         ksToast('Error creating ticket', 'error');
     }
 }
+
+
+let currentCreateModalHK = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    currentCreateModalHK = new bootstrap.Modal(document.getElementById('createTaskModal'));
+    loadHousekeeping();
+});
+
+function clearFiltersHK() {
+    document.getElementById('dateAll').checked = true;
+    document.getElementById('filterSearchHK').value = '';
+    document.getElementById('filterPriorityHK').value = '';
+    document.getElementById('filterStatusHK').value = '';
+    loadHousekeeping();
+}
+
+async function loadHousekeeping() {
+    const search = document.getElementById('filterSearchHK').value;
+    const priority = document.getElementById('filterPriorityHK').value;
+    const status = document.getElementById('filterStatusHK').value;
+    const dateFilter = document.querySelector('input[name="dateFilter"]:checked').value;
+    
+    const params = new URLSearchParams();
+    if(search) params.append('search', search);
+    if(priority) params.append('priority', priority);
+    if(status) params.append('status', status);
+
+    try {
+        const res = await fetch(`/api/v1/housekeeping?${params.toString()}`);
+        const json = await res.json();
+        if(json.success) {
+            let data = json.data.data;
+            
+            // Client-side date filtering if API doesn't support 'dateFilter' enum directly
+            const todayStr = new Date().toISOString().split('T')[0];
+            if(dateFilter === 'today') {
+                data = data.filter(t => t.scheduled_date === todayStr);
+            } else if (dateFilter === 'upcoming') {
+                data = data.filter(t => t.scheduled_date > todayStr);
+            }
+
+            renderTableHK(data);
+            updateKPIsHK(data, todayStr);
+        } else {
+            ksToast('Failed to load tasks', 'error');
+        }
+    } catch(e) {
+        ksToast('Error loading tasks', 'error');
+    }
+}
+
+function updateKPIsHK(data, todayStr) {
+    let pending = 0, inProgress = 0, completedToday = 0;
+    data.forEach(t => {
+        if(t.status === 'pending') pending++;
+        if(t.status === 'in_progress') inProgress++;
+        if(t.status === 'completed' && t.scheduled_date === todayStr) completedToday++;
+    });
+    document.getElementById('kpi-pending').textContent = pending;
+    document.getElementById('kpi-progress').textContent = inProgress;
+    document.getElementById('kpi-completed').textContent = completedToday;
+    document.getElementById('total-count').textContent = data.length;
+}
+
+function getPriorityBadgeHK(priority) {
+    switch(priority) {
+        case 'critical': return '<span class="ks-badge ks-badge-rejected">Critical</span>';
+        case 'high': return '<span class="ks-badge ks-badge-pending" style="background:#FEF3C7;color:#7C2D12">High</span>';
+        case 'medium': return '<span class="ks-badge ks-badge-pending">Medium</span>';
+        case 'low': return '<span class="ks-badge ks-badge-scheduled">Low</span>';
+        default: return `<span class="ks-badge ks-badge-scheduled">${ksEscape(priority)}</span>`;
+    }
+}
+
+function getStatusBadgeHK(status) {
+    switch(status) {
+        case 'pending': return '<span class="ks-badge ks-badge-pending">Pending</span>';
+        case 'assigned': return '<span class="ks-badge ks-badge-scheduled">Assigned</span>';
+        case 'in_progress': return '<span class="ks-badge ks-badge-pending">In Progress</span>';
+        case 'completed': return '<span class="ks-badge ks-badge-confirmed">Completed</span>';
+        case 'cancelled': return '<span class="ks-badge ks-badge-cancelled">Cancelled</span>';
+        default: return `<span class="ks-badge ks-badge-scheduled">${ksEscape(status)}</span>`;
+    }
+}
+
+function getActionsHKDropdownHK(ticket) {
+    const s = ticket.status;
+    if (s === 'completed' || s === 'cancelled') {
+        return `<span class="text-muted"><i class="bi bi-lock"></i> Read Only</span>`;
+    }
+
+    let items = '';
+    if (s === 'pending') {
+        items += `<li><a class="dropdown-item" href="#" onclick="updateStatusHK(${ticket.id}, 'assigned')">Assign</a></li>`;
+        items += `<li><a class="dropdown-item" href="#" onclick="updateStatusHK(${ticket.id}, 'cancelled')">Cancel</a></li>`;
+    } else if (s === 'assigned') {
+        items += `<li><a class="dropdown-item" href="#" onclick="updateStatusHK(${ticket.id}, 'in_progress')">Start</a></li>`;
+        items += `<li><a class="dropdown-item" href="#" onclick="updateStatusHK(${ticket.id}, 'cancelled')">Cancel</a></li>`;
+    } else if (s === 'in_progress') {
+        items += `<li><a class="dropdown-item" href="#" onclick="updateStatusHK(${ticket.id}, 'completed')">Complete</a></li>`;
+        items += `<li><a class="dropdown-item" href="#" onclick="updateStatusHK(${ticket.id}, 'cancelled')">Cancel</a></li>`;
+    }
+
+    return `
+        <div class="dropdown">
+            <button class="ks-btn ks-btn-sm ks-btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                Action
+            </button>
+            <ul class="dropdown-menu">
+                ${items}
+            </ul>
+        </div>
+    `;
+}
+
+function renderTableHK(data) {
+    const tbody = document.getElementById('tableBodyHK');
+    if(data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="ks-empty-state">No tasks found.</div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = data.map(t => {
+        let slot = t.scheduled_start_time ? (t.scheduled_start_time + (t.scheduled_end_time ? ' - ' + t.scheduled_end_time : '')) : '';
+        return `
+            <tr>
+                <td><strong>${ksEscape(t.task_reference)}</strong></td>
+                <td>
+                    <div class="fw-bold">${ksEscape(t.task_type)}</div>
+                    <div class="small text-muted">Venue: ${ksEscape(t.venue_id || '-')} ${t.facility_id ? '| Facility: '+ksEscape(t.facility_id) : ''}</div>
+                </td>
+                <td>
+                    <div>${ksEscape(t.scheduled_date || '-')}</div>
+                    ${slot ? `<div class="small text-muted">${ksEscape(slot)}</div>` : ''}
+                </td>
+                <td>${getPriorityBadgeHK(t.priority)}</td>
+                <td>${ksEscape(t.assigned_employee_id || '-')}</td>
+                <td>${getStatusBadgeHK(t.status)}</td>
+                <td>${getActionsHKDropdownHK(t)}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function updateStatusHK(id, newStatus) {
+    event.preventDefault();
+    try {
+        const res = await fetch(`/api/v1/housekeeping/${id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+            body: JSON.stringify({ status: newStatus })
+        });
+        const json = await res.json();
+        if(json.success) {
+            ksToast('Status updated', 'success');
+            loadHousekeeping();
+        } else {
+            ksToast('Update failed', 'error');
+        }
+    } catch(e) {
+        ksToast('Error updating status', 'error');
+    }
+}
+
+async function submitCreateTask() {
+    const form = document.getElementById('createFormHK');
+    if(!form.reportValidity()) return;
+
+    const payload = {
+        task_type: document.getElementById('createTypeHK').value,
+        priority: document.getElementById('createPriorityHK').value,
+        venue_id: document.getElementById('createVenueHK').value,
+        facility_id: document.getElementById('createFacilityHK').value || null,
+        assigned_employee_id: document.getElementById('createEmployeeHK').value || null,
+        scheduled_date: document.getElementById('createDateHK').value,
+        scheduled_start_time: document.getElementById('createStartHK').value || null,
+        scheduled_end_time: document.getElementById('createEndHK').value || null,
+        description: document.getElementById('createDescHK').value,
+        remarks: document.getElementById('createRemarksHK').value
+    };
+
+    try {
+        const res = await fetch('/api/v1/housekeeping', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if(json.success) {
+            ksToast('Task created', 'success');
+            form.reset();
+            currentCreateModalHK.hide();
+            loadHousekeeping();
+        } else {
+            ksToast('Creation failed', 'error');
+        }
+    } catch(e) {
+        ksToast('Error creating task', 'error');
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const facilityTabs = document.getElementById('facilityTabs');
+    if(facilityTabs) {
+        facilityTabs.addEventListener('shown.bs.tab', function (e) {
+            if (e.target.id === 'maintenance-tab') {
+                if (typeof loadMaintenance === 'function') loadMaintenance();
+            } else if (e.target.id === 'housekeeping-tab') {
+                if (typeof loadHousekeeping === 'function') loadHousekeeping();
+            }
+        });
+    }
+});
 </script>
 
 <?php 
 $slot = ob_get_clean(); 
 include __DIR__ . '/../../layouts/app.blade.php'; 
 ?>
+
+
+
+<script>
+// Auto-injected Context-Aware Dropdowns
+document.addEventListener('DOMContentLoaded', loadGlobalDropdowns);
+
+async function fetchDropdownData(url) {
+    try {
+        const res = await fetch(url).then(r => r.json());
+        if (res.data && res.data.data) return res.data.data;
+        if (res.data) return res.data;
+        return [];
+    } catch (e) {
+        console.error('Error fetching ' + url, e);
+        return [];
+    }
+}
+
+async function populateSelect(selector, url, labelFn) {
+    const select = document.querySelector(selector);
+    if (!select) return;
+    const defaultText = select.options[0] ? select.options[0].text : 'Select...';
+    select.innerHTML = '<option value="">Loading...</option>';
+    const data = await fetchDropdownData(url);
+    select.innerHTML = `<option value="">${defaultText}</option>`;
+    data.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = labelFn(item);
+        select.appendChild(opt);
+    });
+}
+
+async function loadGlobalDropdowns() {
+    const escapeHtml = typeof ksEscape === 'function' ? ksEscape : (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    
+    // Venues
+    const venueSels = ['#createVenue', '#createVenueHK', '#bookingVenue', '#eventVenue', '#activityVenue', '[name="venue_id"]'];
+    venueSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/venues?limit=100', v => escapeHtml(v.name));
+    });
+
+    // Employees
+    const empSels = ['#createEmployee', '#createEmployeeHK', '#eventOrganizer', '#vehicleDriver', '#tripDriver', '[name="organizer_employee_id"]', '#v_driver', '#pt_driver'];
+    empSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/employees?limit=200', e => escapeHtml((e.first_name || '') + ' ' + (e.last_name || '')).trim());
+    });
+
+    // Vendors
+    const vendorSels = ['#createVendor'];
+    vendorSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/vendors?limit=100', v => escapeHtml(v.vendor_name || v.name));
+    });
+
+    // Events
+    const eventSels = ['#bookingEvent', '#tripEvent', '#activityEvent', '#pt_event_id', '#bEventId', '[name="event_id"]'];
+    eventSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/events?limit=100', e => escapeHtml(e.name || e.event_reference));
+    });
+
+    // Teams
+    const teamSels = ['#bTeamId', '[name="team_id"]'];
+    teamSels.forEach(sel => {
+        populateSelect(sel, '/api/v2/teams?limit=100', t => escapeHtml(t.name || t.team_name || t.id)); // Using fallback endpoint if needed
+    });
+
+    // Tournaments
+    const tournSels = ['#bTournamentId', '[name="tournament_id"]'];
+    tournSels.forEach(sel => {
+        populateSelect(sel, '/api/v1/tournaments?limit=100', t => escapeHtml(t.name || t.tournament_name || t.id)); 
+    });
+
+    // Cascading Facilities
+    const venueFacilityMap = [
+        ['#createVenue', '#createFacility'],
+        ['#createVenueHK', '#createFacilityHK'],
+        ['#bookingVenue', '#bookingFacility'],
+        ['#bVenueId', '#bFacilityId'],
+        ['[name="venue_id"]', '[name="facility_id"]']
+    ];
+    
+    for (const [vSel, fSel] of venueFacilityMap) {
+        const vSelect = document.querySelector(vSel);
+        const fSelect = document.querySelector(fSel);
+        if (vSelect && fSelect) {
+            vSelect.addEventListener('change', async (e) => {
+                const venueId = e.target.value;
+                if (!venueId) {
+                    fSelect.innerHTML = '<option value="">Select Facility...</option>';
+                    return;
+                }
+                fSelect.innerHTML = '<option value="">Loading...</option>';
+                const data = await fetchDropdownData(`/api/v1/venues/${venueId}/facilities`);
+                fSelect.innerHTML = '<option value="">Select Facility...</option>';
+                data.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.textContent = `${escapeHtml(f.name)} (${escapeHtml(f.facility_type)})`;
+                    fSelect.appendChild(opt);
+                });
+            });
+        }
+    }
+}
+</script>

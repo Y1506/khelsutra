@@ -3,6 +3,11 @@ $pageTitle = 'Add Venue — KhelSutra';
 $activePage = 'venues';
 $orgId = current_organization_id();
 
+// Fetch sports
+$db = \App\Services\BaseService::getDatabaseConnection();
+$sportsStmt = $db->query("SELECT id, name FROM sports WHERE status = 'active' ORDER BY name ASC");
+$sports = $sportsStmt ? $sportsStmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
 ob_start();
 ?>
 
@@ -106,24 +111,57 @@ ob_start();
             </div>
         </div>
 
-        <!-- Section 3: Initial Facility Slot -->
+        <!-- Section 3: Facilities -->
         <div class="card p-4 mb-4" style="border: 1px solid var(--ks-border); border-radius: var(--ks-radius-card); background: #fff;">
-            <h5 class="fw-bold mb-3" style="color: var(--ks-navy); font-size: 15px; border-bottom: 1px solid var(--ks-border-light); padding-bottom: 10px;">
-                3. Primary Facility Slot (Optional Initial Field / Court)
-            </h5>
+            <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom: 1px solid var(--ks-border-light); padding-bottom: 10px;">
+                <h5 class="fw-bold mb-0" style="color: var(--ks-navy); font-size: 15px;">
+                    3. Facilities (Optional)
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addFacilityBtn" style="border-radius: var(--ks-radius-button); font-weight: 600;">
+                    <i class="bi bi-plus-lg"></i> Add Facility
+                </button>
+            </div>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold text-dark">Facility Name</label>
-                    <input type="text" name="facility_name" class="form-control" placeholder="e.g. Main Turf Pitch 1" style="font-size: 13px; border-radius: var(--ks-radius-button);">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-semibold text-dark">Facility Type</label>
-                    <input type="text" name="facility_type" class="form-control" placeholder="e.g. Grass Turf, Wooden Court" style="font-size: 13px; border-radius: var(--ks-radius-button);">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-semibold text-dark">Slot Capacity</label>
-                    <input type="number" name="facility_capacity" class="form-control" placeholder="e.g. 50" style="font-size: 13px; border-radius: var(--ks-radius-button);">
+            <div id="facilitiesContainer">
+                <div class="row g-3 facility-row mb-3 pb-3 border-bottom">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold text-dark">Facility Name</label>
+                        <input type="text" name="facility_name[]" class="form-control" placeholder="e.g. Main Turf Pitch 1" style="font-size: 13px; border-radius: var(--ks-radius-button);">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold text-dark">Facility Type</label>
+                        <input type="text" name="facility_type[]" class="form-control" placeholder="e.g. Grass Turf" style="font-size: 13px; border-radius: var(--ks-radius-button);">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold text-dark">Capacity</label>
+                        <input type="number" name="facility_capacity[]" class="form-control" placeholder="50" style="font-size: 13px; border-radius: var(--ks-radius-button);">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold text-dark">Supported Sports</label>
+                        <div class="dropdown">
+                            <button class="form-select text-start sport-dropdown-btn d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="font-size: 13px; border-radius: var(--ks-radius-button); height: 38px; background-color: #fff;">
+                                <span class="btn-text text-muted text-truncate" style="max-width: 90%;">Select Sports...</span>
+                            </button>
+                            <ul class="dropdown-menu w-100 p-2 shadow-sm" style="font-size: 13px; max-height: 220px; overflow-y: auto; border-radius: var(--ks-radius-card);">
+                                <?php foreach ($sports as $sport): ?>
+                                    <li>
+                                        <div class="form-check m-0 py-1">
+                                            <input class="form-check-input sport-cb" type="checkbox" name="facility_sports_0[]" value="<?= $sport['id'] ?>" id="sport_0_<?= $sport['id'] ?>">
+                                            <label class="form-check-label w-100" for="sport_0_<?= $sport['id'] ?>" style="cursor: pointer;">
+                                                <?= htmlspecialchars($sport['name']) ?>
+                                            </label>
+                                        </div>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-facility-btn w-100 d-flex align-items-center justify-content-center" style="border-radius: var(--ks-radius-button); height: 38px;" disabled title="Remove Facility">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -139,6 +177,48 @@ ob_start();
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addFacilityBtn = document.getElementById('addFacilityBtn');
+    if (addFacilityBtn) {
+        addFacilityBtn.addEventListener('click', function() {
+            const container = document.getElementById('facilitiesContainer');
+            const firstRow = container.querySelector('.facility-row');
+            const newRow = firstRow.cloneNode(true);
+            
+            // Clear inputs
+            newRow.querySelectorAll('input').forEach(input => input.value = '');
+            
+            // Enable remove button
+            const removeBtn = newRow.querySelector('.remove-facility-btn');
+            removeBtn.disabled = false;
+            removeBtn.addEventListener('click', function() {
+                newRow.remove();
+            });
+            
+            container.appendChild(newRow);
+        });
+    }
+});
+
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('sport-cb')) {
+        const dropdown = e.target.closest('.dropdown');
+        if (dropdown) {
+            const btnText = dropdown.querySelector('.sport-dropdown-btn .btn-text');
+            const checked = dropdown.querySelectorAll('.sport-cb:checked');
+            if (checked.length === 0) {
+                btnText.textContent = 'Select Sports...';
+            } else if (checked.length === 1) {
+                btnText.textContent = checked[0].nextElementSibling.textContent.trim();
+            } else {
+                btnText.textContent = checked.length + ' sports selected';
+            }
+        }
+    }
+});
+</script>
 
 <?php
 $slot = ob_get_clean();

@@ -56,4 +56,13 @@ class CoachProfile
             'updated_at' => $this->updated_at,
         ];
     }
+
+
+
+    public function sports()
+    {
+        return $this->belongsToMany(\App\Models\Sport::class, 'coach_sports', 'coach_id', 'sport_id')
+            ->withPivot('organization_id')
+            ->withTimestamps();
+    }
 }

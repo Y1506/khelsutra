@@ -61,7 +61,7 @@ ob_start();
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold text-dark">Sport <span class="text-danger">*</span></label>
-                        <select name="sport_id" class="form-select" required style="font-size: 13px; border-radius: var(--ks-radius-button);">
+                        <select name="sport_id" id="sportSelect" class="form-select" required style="font-size: 13px; border-radius: var(--ks-radius-button);">
                             <?php foreach ($sports as $s): ?>
                                 <option value="<?= (int)$s['id'] ?>" <?= $tournament['sport_id'] == $s['id'] ? 'selected' : '' ?>><?= htmlspecialchars($s['name'], ENT_QUOTES, 'UTF-8') ?></option>
                             <?php endforeach; ?>
@@ -163,6 +163,55 @@ ob_start();
         </form>
     <?php endif; ?>
 </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sportSelect = document.getElementById('sportSelect');
+    const venueSelect = document.getElementById('venueSelect');
+    
+    if (sportSelect && venueSelect) {
+        // Clone all original options
+        const allOptions = Array.from(venueSelect.options).map(opt => opt.cloneNode(true));
+        
+        sportSelect.addEventListener('change', function() {
+            const selectedSport = this.value;
+            const currentSelectedVenue = venueSelect.value;
+            
+            // Clear current options
+            venueSelect.innerHTML = '';
+            
+            // Filter options
+            allOptions.forEach(opt => {
+                if (opt.value === '') {
+                    venueSelect.appendChild(opt.cloneNode(true)); // Add placeholder
+                } else {
+                    const sportsStr = opt.getAttribute('data-sports') || '';
+                    const sportsArr = sportsStr.split(',');
+                    
+                    // If no sport selected, or venue has no sports (assume general purpose), or venue has the sport
+                    if (!selectedSport || sportsStr === '' || sportsArr.includes(selectedSport)) {
+                        venueSelect.appendChild(opt.cloneNode(true));
+                    }
+                }
+            });
+            
+            // Try to restore previous selection if it's still available
+            let match = Array.from(venueSelect.options).find(opt => opt.value === currentSelectedVenue);
+            if (match) {
+                venueSelect.value = currentSelectedVenue;
+            } else {
+                venueSelect.value = '';
+            }
+        });
+        
+        // Trigger initial filter
+        const initialVenue = venueSelect.value;
+        sportSelect.dispatchEvent(new Event('change'));
+        if(initialVenue) venueSelect.value = initialVenue;
+    }
+});
+</script>
 
 <?php
 $slot = ob_get_clean();

@@ -105,6 +105,75 @@ return [
     '/inventory/{id}/edit' => function($id) {
         return ['view' => 'inventory/inventory-edit', 'data' => ['id' => $id]];
     },
+    '/inventory/categories' => function() {
+        return ['view' => 'inventory/inventory-categories'];
+    },
+    '/equipment' => function() {
+        return ['view' => 'equipment/equipment-index'];
+    },
+    '/equipment/create' => function() {
+        return ['view' => 'equipment/equipment-create'];
+    },
+    '/equipment/{id}' => function($id) {
+        return ['view' => 'equipment/equipment-show', 'data' => ['id' => $id, 'data' => ['id' => $id]]];
+    },
+    '/equipment/{id}/edit' => function($id) {
+        return ['view' => 'equipment/equipment-edit', 'data' => ['id' => $id, 'data' => ['id' => $id]]];
+    },
+    '/vendors' => function() {
+        return ['view' => 'vendors/vendors-index'];
+    },
+    '/vendors/create' => function() {
+        return ['view' => 'vendors/vendors-create'];
+    },
+    '/vendors/{id}' => function($id) {
+        return ['view' => 'vendors/vendors-show', 'data' => ['id' => $id, 'data' => ['id' => $id]]];
+    },
+    '/vendors/{id}/edit' => function($id) {
+        return ['view' => 'vendors/vendors-edit', 'data' => ['id' => $id, 'data' => ['id' => $id]]];
+    },
+    '/purchases' => function() {
+        return ['view' => 'purchases/purchases-index'];
+    },
+    '/purchases/requests/create' => function() {
+        return ['view' => 'purchases/requests-create'];
+    },
+    '/purchases/requests/{id}' => function($id) {
+        return ['view' => 'purchases/requests-show', 'data' => ['id' => $id]];
+    },
+    '/purchases/orders/create' => function() {
+        return ['view' => 'purchases/orders-create'];
+    },
+    '/purchases/orders/{id}' => function($id) {
+        return ['view' => 'purchases/orders-show', 'data' => ['id' => $id]];
+    },
+    '/purchases/receipts/{id}' => function($id) {
+        return ['view' => 'purchases/receipts-show', 'data' => ['id' => $id]];
+    },
+    '/finance' => function() {
+        return ['view' => 'finance/finance-index'];
+    },
+    '/finance/expenses/create' => function() {
+        return ['view' => 'finance/expenses-create'];
+    },
+    '/finance/expenses/{id}' => function($id) {
+        return ['view' => 'finance/expenses-show', 'data' => ['id' => $id]];
+    },
+    '/finance/income/create' => function() {
+        return ['view' => 'finance/income-create'];
+    },
+    '/finance/income/{id}' => function($id) {
+        return ['view' => 'finance/income-show', 'data' => ['id' => $id]];
+    },
+    '/finance/budgets/create' => function() {
+        return ['view' => 'finance/budgets-create'];
+    },
+    '/finance/budgets/{id}' => function($id) {
+        return ['view' => 'finance/budgets-show', 'data' => ['id' => $id]];
+    },
+    '/finance/categories' => function() {
+        return ['view' => 'finance/categories-index'];
+    },
     '/hr-finance' => function() {
         return ['view' => 'hr/hr-finance'];
     },
@@ -113,6 +182,9 @@ return [
     },
     '/settings' => function() {
         return ['view' => 'settings/settings'];
+    },
+    '/notifications' => function() {
+        return ['view' => 'notifications/index'];
     },
     '/search' => function() {
         return ['view' => 'search/index'];

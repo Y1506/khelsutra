@@ -1829,22 +1829,23 @@ if (preg_match('#^/venues/(\d+)/facilities/create$#', $uri, $m)) {
 
 if ($uri === '/venues/bookings/create') {
     $venueId = (int)($_POST['venue_id'] ?? 0);
-    $facilityId = (int)($_POST['facility_id'] ?? 0);
-    $date = trim($_POST['booking_date'] ?? '');
     $purpose = trim($_POST['purpose'] ?? '');
 
-    if (empty($venueId) || empty($facilityId) || empty($date) || empty($purpose)) {
-        header('Location: /venues/bookings/create?error=' . urlencode('Please select Venue, Facility, Date, and Purpose.'));
+    $facilityIds = $_POST['facility_id'] ?? [];
+    $dates = $_POST['booking_date'] ?? [];
+
+    if (empty($venueId) || empty($facilityIds) || !is_array($facilityIds) || empty($dates) || empty($purpose)) {
+        header('Location: /venues/bookings/create?error=' . urlencode('Please select Venue, at least one Facility Slot, Date, and Purpose.'));
         exit;
     }
 
     $venueService = new \App\Services\Venue\VenueService();
     try {
-        $booking = $venueService->createBooking($orgId, $_POST, $userId);
-        header('Location: /venues/' . $venueId . '?success=' . urlencode('Venue facility slot booked successfully.'));
+        $venueService->createBookingsBatch($orgId, $_POST, $userId);
+        header('Location: /venues/' . $venueId . '?success=' . urlencode('Venue facility slot(s) booked successfully.'));
         exit;
     } catch (\Throwable $e) {
-        header('Location: /venues/bookings/create?venue_id=' . $venueId . '&facility_id=' . $facilityId . '&error=' . urlencode($e->getMessage()));
+        header('Location: /venues/bookings/create?venue_id=' . $venueId . '&error=' . urlencode($e->getMessage()));
         exit;
     }
 }
@@ -2032,6 +2033,350 @@ if (preg_match('#^/inventory/(\d+)/delete$#', $uri, $m)) {
     }
 }
 
+// Category Actions
+if ($uri === '/inventory/categories/create') {
+    $catService = new \App\Services\Inventory\InventoryCategoryService();
+    try {
+        $created = $catService->createCategory($orgId, $_POST, $userId);
+        header('Location: /inventory/categories?success=' . urlencode("Category '{$created['name']}' created successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /inventory/categories?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/inventory/categories/(\d+)/edit$#', $uri, $m)) {
+    $catId = (int)$m[1];
+    $catService = new \App\Services\Inventory\InventoryCategoryService();
+    try {
+        $updated = $catService->updateCategory($orgId, $catId, $_POST, $userId);
+        header('Location: /inventory/categories?success=' . urlencode("Category '{$updated['name']}' updated successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /inventory/categories?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/inventory/categories/(\d+)/status$#', $uri, $m)) {
+    $catId = (int)$m[1];
+    $status = trim($_POST['status'] ?? 'active');
+    $catService = new \App\Services\Inventory\InventoryCategoryService();
+    try {
+        $updated = $catService->setStatus($orgId, $catId, $status, $userId);
+        $statusLabel = ucfirst($status);
+        header('Location: /inventory/categories?success=' . urlencode("Category '{$updated['name']}' is now {$statusLabel}."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /inventory/categories?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/inventory/categories/(\d+)/delete$#', $uri, $m)) {
+    $catId = (int)$m[1];
+    $catService = new \App\Services\Inventory\InventoryCategoryService();
+    try {
+        $catService->deleteCategory($orgId, $catId, $userId);
+        header('Location: /inventory/categories?success=' . urlencode('Category removed successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /inventory/categories?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// ==========================================
+// Equipment Actions
+// ==========================================
+if ($uri === '/equipment/create') {
+    $eqService = new \App\Services\Equipment\EquipmentService();
+    try {
+        $created = $eqService->createEquipment($orgId, $_POST, $userId);
+        header('Location: /equipment/' . $created['id'] . '?success=' . urlencode("Equipment '{$created['equipment_name']}' created successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /equipment/create?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/equipment/(\d+)/edit$#', $uri, $m)) {
+    $eqId = (int)$m[1];
+    $eqService = new \App\Services\Equipment\EquipmentService();
+    try {
+        $ok = $eqService->updateEquipment($orgId, $eqId, $_POST, $userId);
+        if ($ok) {
+            header('Location: /equipment/' . $eqId . '?success=' . urlencode('Equipment updated successfully.'));
+        } else {
+            header('Location: /equipment/' . $eqId . '/edit?error=' . urlencode('Failed to update equipment.'));
+        }
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /equipment/' . $eqId . '/edit?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/equipment/(\d+)/delete$#', $uri, $m)) {
+    $eqId = (int)$m[1];
+    $eqService = new \App\Services\Equipment\EquipmentService();
+    try {
+        $eqService->deleteEquipment($orgId, $eqId, $userId);
+        header('Location: /equipment?success=' . urlencode('Equipment removed successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        $referer = $_SERVER['HTTP_REFERER'] ?? '/equipment';
+        $redirectUrl = str_contains($referer, '/equipment') ? $referer : '/equipment';
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/equipment/(\d+)/assign$#', $uri, $m)) {
+    $eqId = (int)$m[1];
+    $eqService = new \App\Services\Equipment\EquipmentService();
+    $referer = $_SERVER['HTTP_REFERER'] ?? ('/equipment/' . $eqId);
+    try {
+        $res = $eqService->assignEquipment($orgId, $eqId, $_POST, $userId);
+        $redirectUrl = str_contains($referer, '/equipment') ? $referer : ('/equipment/' . $eqId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'success=' . urlencode("Equipment assigned to {$res['assignee_name']}."));
+        exit;
+    } catch (\Throwable $e) {
+        $redirectUrl = str_contains($referer, '/equipment') ? $referer : ('/equipment/' . $eqId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/equipment/(\d+)/return$#', $uri, $m)) {
+    $eqId = (int)$m[1];
+    $eqService = new \App\Services\Equipment\EquipmentService();
+    $referer = $_SERVER['HTTP_REFERER'] ?? ('/equipment/' . $eqId);
+    try {
+        $res = $eqService->returnEquipment($orgId, $eqId, $_POST, $userId);
+        $statusMsg = $res['equipment_status'] === 'available' ? 'Available' : ucfirst($res['equipment_status']);
+        $redirectUrl = str_contains($referer, '/equipment') ? $referer : ('/equipment/' . $eqId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'success=' . urlencode("Equipment returned. Current status: {$statusMsg}."));
+        exit;
+    } catch (\Throwable $e) {
+        $redirectUrl = str_contains($referer, '/equipment') ? $referer : ('/equipment/' . $eqId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// ==========================================
+// Vendor & Supplier Actions
+// ==========================================
+if ($uri === '/vendors/create') {
+    $vendorService = new \App\Services\Vendor\VendorService();
+    try {
+        $created = $vendorService->createVendor($orgId, $_POST, $userId);
+        header('Location: /vendors/' . $created['id'] . '?success=' . urlencode("Vendor '{$created['company_name']}' created successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /vendors/create?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/vendors/(\d+)/edit$#', $uri, $m)) {
+    $vendorId = (int)$m[1];
+    $vendorService = new \App\Services\Vendor\VendorService();
+    try {
+        $ok = $vendorService->updateVendor($orgId, $vendorId, $_POST, $userId);
+        if ($ok) {
+            header('Location: /vendors/' . $vendorId . '?success=' . urlencode('Vendor updated successfully.'));
+        } else {
+            header('Location: /vendors/' . $vendorId . '/edit?error=' . urlencode('Failed to update vendor.'));
+        }
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /vendors/' . $vendorId . '/edit?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/vendors/(\d+)/delete$#', $uri, $m)) {
+    $vendorId = (int)$m[1];
+    $vendorService = new \App\Services\Vendor\VendorService();
+    try {
+        $vendorService->deleteVendor($orgId, $vendorId, $userId);
+        header('Location: /vendors?success=' . urlencode('Vendor profile removed successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        $referer = $_SERVER['HTTP_REFERER'] ?? ('/vendors/' . $vendorId);
+        $redirectUrl = str_contains($referer, '/vendors') ? $referer : ('/vendors/' . $vendorId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/vendors/(\d+)/status$#', $uri, $m)) {
+    $vendorId = (int)$m[1];
+    $status = trim($_POST['status'] ?? '');
+    $reason = trim($_POST['reason'] ?? '') ?: null;
+    $vendorService = new \App\Services\Vendor\VendorService();
+    $referer = $_SERVER['HTTP_REFERER'] ?? ('/vendors/' . $vendorId);
+    try {
+        $vendorService->setStatus($orgId, $vendorId, $status, $userId, $reason);
+        $redirectUrl = str_contains($referer, '/vendors') ? $referer : ('/vendors/' . $vendorId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'success=' . urlencode("Vendor status updated to " . ucfirst($status) . "."));
+        exit;
+    } catch (\Throwable $e) {
+        $redirectUrl = str_contains($referer, '/vendors') ? $referer : ('/vendors/' . $vendorId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/vendors/(\d+)/invoices/create$#', $uri, $m)) {
+    $vendorId = (int)$m[1];
+    $vendorService = new \App\Services\Vendor\VendorService();
+    $referer = $_SERVER['HTTP_REFERER'] ?? ('/vendors/' . $vendorId);
+    try {
+        $invoice = $vendorService->createInvoice($orgId, $vendorId, $_POST, $userId);
+        $redirectUrl = str_contains($referer, '/vendors') ? $referer : ('/vendors/' . $vendorId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'success=' . urlencode("Invoice '{$invoice['invoice_number']}' recorded successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        $redirectUrl = str_contains($referer, '/vendors') ? $referer : ('/vendors/' . $vendorId);
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/vendor-invoices/(\d+)/edit$#', $uri, $m)) {
+    $invoiceId = (int)$m[1];
+    $vendorId = (int)($_POST['vendor_id'] ?? 0);
+    $vendorService = new \App\Services\Vendor\VendorService();
+    $defaultRedirect = $vendorId ? ('/vendors/' . $vendorId) : '/vendors';
+    $referer = $_SERVER['HTTP_REFERER'] ?? $defaultRedirect;
+    try {
+        $vendorService->updateInvoice($orgId, $invoiceId, $_POST, $userId);
+        $redirectUrl = str_contains($referer, '/vendors') ? $referer : $defaultRedirect;
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'success=' . urlencode('Invoice updated successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        $redirectUrl = str_contains($referer, '/vendors') ? $referer : $defaultRedirect;
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// ==========================================
+// Procurement & Purchase Actions
+// ==========================================
+if ($uri === '/purchases/requests/create') {
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $created = $purchaseService->createPurchaseRequest($orgId, $_POST, $userId);
+        header('Location: /purchases/requests/' . $created['id'] . '?success=' . urlencode("Purchase request '{$created['request_reference']}' created successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /purchases/requests/create?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/purchases/requests/(\d+)/submit$#', $uri, $m)) {
+    $prId = (int)$m[1];
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $purchaseService->submitPurchaseRequest($orgId, $prId, $userId);
+        header('Location: /purchases/requests/' . $prId . '?success=' . urlencode('Purchase request submitted for approval.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /purchases/requests/' . $prId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/purchases/requests/(\d+)/approve$#', $uri, $m)) {
+    $prId = (int)$m[1];
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $purchaseService->approvePurchaseRequest($orgId, $prId, $userId);
+        header('Location: /purchases/requests/' . $prId . '?success=' . urlencode('Purchase request approved successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /purchases/requests/' . $prId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/purchases/requests/(\d+)/reject$#', $uri, $m)) {
+    $prId = (int)$m[1];
+    $reason = trim($_POST['rejection_reason'] ?? '');
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $purchaseService->rejectPurchaseRequest($orgId, $prId, $reason ?: null, $userId);
+        header('Location: /purchases/requests/' . $prId . '?success=' . urlencode('Purchase request rejected.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /purchases/requests/' . $prId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/purchases/requests/(\d+)/cancel$#', $uri, $m)) {
+    $prId = (int)$m[1];
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $purchaseService->cancelPurchaseRequest($orgId, $prId, $userId);
+        header('Location: /purchases/requests/' . $prId . '?success=' . urlencode('Purchase request cancelled.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /purchases/requests/' . $prId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if ($uri === '/purchases/orders/create') {
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $statusMsg = ($created['status'] === 'draft')
+            ? "Purchase order '{$created['po_number']}' saved as draft."
+            : "Purchase order '{$created['po_number']}' issued successfully.";
+        header('Location: /purchases/orders/' . $created['id'] . '?success=' . urlencode($statusMsg));
+        exit;
+    } catch (\Throwable $e) {
+        $refUrl = !empty($_POST['purchase_request_id']) ? ('/purchases/orders/create?purchase_request_id=' . (int)$_POST['purchase_request_id']) : '/purchases/orders/create';
+        header('Location: ' . $refUrl . (str_contains($refUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/purchases/orders/(\d+)/status$#', $uri, $m)) {
+    $poId = (int)$m[1];
+    $status = trim($_POST['status'] ?? '');
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $purchaseService->updatePoStatus($orgId, $poId, $status, $userId);
+        header('Location: /purchases/orders/' . $poId . '?success=' . urlencode("Order status updated to " . ucfirst($status) . "."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /purchases/orders/' . $poId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/purchases/orders/(\d+)/receive$#', $uri, $m)) {
+    $poId = (int)$m[1];
+    $purchaseService = new \App\Services\Purchase\PurchaseService();
+    try {
+        $res = $purchaseService->receiveGoods($orgId, $poId, $_POST, $userId);
+        $grn = $res['goods_receipt']['receipt_number'] ?? 'GRN';
+        header('Location: /purchases/orders/' . $poId . '?success=' . urlencode("Goods received via {$grn} and inventory updated."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /purchases/orders/' . $poId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
 // ==========================================
 // 8. LEAVE ACTIONS
 // ==========================================
@@ -2056,5 +2401,312 @@ if ($uri === '/leave/create') {
         header('Location: /leave/create?error=' . urlencode('Unable to submit leave: ' . $e->getMessage()));
         exit;
     }
+}
+
+// ==========================================
+// 9. FINANCE ACTIONS
+// ==========================================
+
+// --- Categories ---
+if ($uri === '/finance/categories/create') {
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->createCategory($orgId, $_POST, $userId);
+        header('Location: /finance?tab=categories&success=' . urlencode('Finance category created successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance?tab=categories&error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/categories/(\d+)/edit$#', $uri, $m)) {
+    $catId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->updateCategory($orgId, $catId, $_POST, $userId);
+        header('Location: /finance?tab=categories&success=' . urlencode('Category updated successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance?tab=categories&error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/categories/(\d+)/status$#', $uri, $m)) {
+    $catId = (int)$m[1];
+    $status = trim($_POST['status'] ?? 'active');
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->setCategoryStatus($orgId, $catId, $status, $userId);
+        header('Location: /finance?tab=categories&success=' . urlencode("Category status changed to {$status}."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance?tab=categories&error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// --- Income Transactions ---
+if ($uri === '/finance/income/create') {
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $created = $financeService->recordIncome($orgId, $_POST, $userId);
+        header('Location: /finance/income/' . $created['id'] . '?success=' . urlencode("Income '{$created['income_reference']}' recorded successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/income/create?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/income/(\d+)/edit$#', $uri, $m)) {
+    $incId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->updateIncome($orgId, $incId, $_POST, $userId);
+        header('Location: /finance/income/' . $incId . '?success=' . urlencode('Income record updated successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/income/' . $incId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/income/(\d+)/cancel$#', $uri, $m)) {
+    $incId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->cancelIncome($orgId, $incId, $userId);
+        header('Location: /finance/income/' . $incId . '?success=' . urlencode('Income transaction cancelled.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/income/' . $incId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// --- Expenses ---
+if ($uri === '/finance/expenses/create') {
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $created = $financeService->recordExpense($orgId, $_POST, $userId);
+        header('Location: /finance/expenses/' . $created['id'] . '?success=' . urlencode("Expense '{$created['expense_reference']}' recorded successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/expenses/create?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/expenses/(\d+)/edit$#', $uri, $m)) {
+    $expId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->updateExpense($orgId, $expId, $_POST, $userId);
+        header('Location: /finance/expenses/' . $expId . '?success=' . urlencode('Expense updated successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/expenses/' . $expId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/expenses/(\d+)/approve$#', $uri, $m)) {
+    $expId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->approveExpense($orgId, $expId, $userId);
+        header('Location: /finance/expenses/' . $expId . '?success=' . urlencode('Expense approved successfully.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/expenses/' . $expId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/expenses/(\d+)/reject$#', $uri, $m)) {
+    $expId = (int)$m[1];
+    $reason = trim($_POST['rejection_reason'] ?? '');
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->rejectExpense($orgId, $expId, $reason ?: null, $userId);
+        header('Location: /finance/expenses/' . $expId . '?success=' . urlencode('Expense rejected.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/expenses/' . $expId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/expenses/(\d+)/cancel$#', $uri, $m)) {
+    $expId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->cancelExpense($orgId, $expId, $userId);
+        header('Location: /finance/expenses/' . $expId . '?success=' . urlencode('Expense cancelled.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/expenses/' . $expId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/expenses/(\d+)/delete$#', $uri, $m)) {
+    $expId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->deleteExpense($orgId, $expId, $userId);
+        header('Location: /finance?tab=expenses&success=' . urlencode('Expense deleted.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/expenses/' . $expId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// --- Budgets ---
+if ($uri === '/finance/budgets/create') {
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $items = [];
+        if (!empty($_POST['categories']) && is_array($_POST['categories'])) {
+            foreach ($_POST['categories'] as $idx => $catId) {
+                $allocated = (float)($_POST['allocated_amounts'][$idx] ?? 0);
+                if ($catId && $allocated > 0) {
+                    $items[] = [
+                        'finance_category_id' => (int)$catId,
+                        'department_id' => !empty($_POST['department_ids'][$idx]) ? (int)$_POST['department_ids'][$idx] : null,
+                        'allocated_amount' => $allocated,
+                        'description' => !empty($_POST['descriptions'][$idx]) ? trim($_POST['descriptions'][$idx]) : null,
+                    ];
+                }
+            }
+        }
+        $data = $_POST;
+        $data['items'] = $items;
+        $created = $financeService->createBudget($orgId, $data, $userId);
+        header('Location: /finance/budgets/' . $created['id'] . '?success=' . urlencode("Budget '{$created['budget_name']}' created successfully."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/budgets/create?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/budgets/(\d+)/items/add$#', $uri, $m)) {
+    $budgetId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->addBudgetItem($orgId, $budgetId, $_POST);
+        header('Location: /finance/budgets/' . $budgetId . '?success=' . urlencode('Budget line item added.'));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/budgets/' . $budgetId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+if (preg_match('#^/finance/budgets/(\d+)/status$#', $uri, $m)) {
+    $budgetId = (int)$m[1];
+    $status = trim($_POST['status'] ?? 'active');
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $financeService->setBudgetStatus($orgId, $budgetId, $status, $userId);
+        header('Location: /finance/budgets/' . $budgetId . '?success=' . urlencode("Budget status updated to {$status}."));
+        exit;
+    } catch (\Throwable $e) {
+        header('Location: /finance/budgets/' . $budgetId . '?error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// --- Payments ---
+if ($uri === '/finance/payments/create') {
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $created = $financeService->recordPayment($orgId, $_POST, $userId);
+        $redirectUrl = '/finance?tab=payments';
+        if (!empty($_POST['expense_id'])) {
+            $redirectUrl = '/finance/expenses/' . (int)$_POST['expense_id'];
+        } elseif (!empty($_POST['vendor_invoice_id']) && !empty($_POST['vendor_id'])) {
+            $redirectUrl = '/vendors/' . (int)$_POST['vendor_id'];
+        }
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'success=' . urlencode("Payment '{$created['payment_reference']}' of ₹" . number_format((float)$created['amount'], 2) . " recorded."));
+        exit;
+    } catch (\Throwable $e) {
+        $redirectUrl = '/finance?tab=payments';
+        if (!empty($_POST['expense_id'])) {
+            $redirectUrl = '/finance/expenses/' . (int)$_POST['expense_id'];
+        } elseif (!empty($_POST['vendor_invoice_id']) && !empty($_POST['vendor_id'])) {
+            $redirectUrl = '/vendors/' . (int)$_POST['vendor_id'];
+        }
+        header('Location: ' . $redirectUrl . (str_contains($redirectUrl, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// Direct vendor invoice payment hook
+if (preg_match('#^/vendor-invoices/(\d+)/pay$#', $uri, $m)) {
+    $invId = (int)$m[1];
+    $financeService = new \App\Services\Finance\FinanceService();
+    try {
+        $payData = array_merge($_POST, [
+            'payment_type' => 'vendor_invoice',
+            'vendor_invoice_id' => $invId,
+        ]);
+        $created = $financeService->recordPayment($orgId, $payData, $userId);
+        $vendorId = !empty($_POST['vendor_id']) ? (int)$_POST['vendor_id'] : null;
+        $redir = $vendorId ? '/vendors/' . $vendorId : '/finance?tab=payments';
+        header('Location: ' . $redir . (str_contains($redir, '?') ? '&' : '?') . 'success=' . urlencode("Payment '{$created['payment_reference']}' recorded for invoice."));
+        exit;
+    } catch (\Throwable $e) {
+        $vendorId = !empty($_POST['vendor_id']) ? (int)$_POST['vendor_id'] : null;
+        $redir = $vendorId ? '/vendors/' . $vendorId : '/finance?tab=payments';
+        header('Location: ' . $redir . (str_contains($redir, '?') ? '&' : '?') . 'error=' . urlencode($e->getMessage()));
+        exit;
+    }
+}
+
+// ==========================================
+// 12. NOTIFICATION ACTIONS
+// ==========================================
+if ($uri === '/notifications/read' || preg_match('#^/notifications/(\d+)/read$#', $uri, $m)) {
+    $rawInput = file_get_contents('php://input');
+    $body = json_decode($rawInput, true) ?? [];
+    $notifId = isset($m[1]) ? (int)$m[1] : (int)($_POST['notification_id'] ?? ($body['notification_id'] ?? 0));
+
+    $notifService = new \App\Services\Notification\NotificationService();
+    $ok = $notifService->markAsRead($orgId, $notifId, $userId);
+    $unreadCount = $notifService->getUnreadCount($orgId, $userId);
+
+    // If AJAX/JSON request
+    if ((!empty($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) || !empty($body) || (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $ok, 'unread_count' => $unreadCount]);
+        exit;
+    }
+
+    $referer = $_SERVER['HTTP_REFERER'] ?? '/notifications';
+    header('Location: ' . $referer);
+    exit;
+}
+
+if ($uri === '/notifications/read-all') {
+    $notifService = new \App\Services\Notification\NotificationService();
+    $updated = $notifService->markAllAsRead($orgId, $userId);
+
+    $rawInput = file_get_contents('php://input');
+    $body = json_decode($rawInput, true) ?? [];
+
+    if ((!empty($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json')) || !empty($body) || (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'updated_count' => $updated, 'unread_count' => 0]);
+        exit;
+    }
+
+    $referer = $_SERVER['HTTP_REFERER'] ?? '/notifications';
+    header('Location: ' . $referer);
+    exit;
 }
 

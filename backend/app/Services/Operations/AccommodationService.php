@@ -55,4 +55,21 @@ class AccommodationService
             return $acc->delete();
         });
     }
+
+    public function listRooms(int $orgId, int $accommodationId): array
+    {
+        $accommodation = \App\Models\Accommodation::where('id', $accommodationId)
+            ->where('organization_id', $orgId)
+            ->first();
+        if (!$accommodation) {
+            throw new \Exception('Accommodation not found', 404);
+        }
+        
+        $rooms = \App\Models\AccommodationRoom::where('accommodation_id', $accommodationId)
+            ->where('organization_id', $orgId)
+            ->get();
+            
+        return ['data' => $rooms->toArray()];
+    }
 }
+

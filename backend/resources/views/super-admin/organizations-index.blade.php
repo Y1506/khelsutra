@@ -17,7 +17,7 @@ ob_start();
     <div class="ks-header-actions">
         <a href="/super-admin/organizations/create" class="ks-btn ks-btn-primary">
             <i class="bi bi-plus-lg"></i>
-            <span>+ Create Organisation</span>
+            <span>Create Organisation</span>
         </a>
     </div>
 </div>

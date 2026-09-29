@@ -10,12 +10,61 @@ use Exception;
 
 class TransportTripService
 {
-    public function createTrip(int $orgId, array $data): TransportTrip
+    public function createTrip(int $orgId, array $data): array|TransportTrip
     {
         return DB::transaction(function () use ($orgId, $data) {
-            $vehicleId = $data['vehicle_id'];
-            $driverId = $data['driver_employee_id'] ?? null;
             $tripDate = $data['trip_date'];
+
+            if (!empty($data['auto_assign'])) {
+                $assignmentService = new TransportAssignmentService();
+                $plan = $assignmentService->planAssignment($orgId, [
+                    'travellers' => $data['travellers'] ?? 0,
+                    'seat_buffer' => $data['seat_buffer'] ?? 0,
+                    'trip_date' => $tripDate
+                ]);
+
+                if (!$plan['success']) {
+                    throw new Exception("Cannot auto-assign vehicles: " . $plan['message'] . " Shortfall: " . $plan['shortfall'], 409);
+                }
+
+                $tripGroupId = uniqid('TG-');
+                $trips = [];
+
+                foreach ($plan['assigned_vehicles'] as $vehicleData) {
+                    $vehicleId = $vehicleData['id'];
+                    $vehicle = Vehicle::where('organization_id', $orgId)->lockForUpdate()->findOrFail($vehicleId);
+
+                    if (!in_array($vehicle->status, ['available', 'assigned'])) {
+                        throw new Exception("Vehicle {$vehicleId} is no longer available.", 409);
+                    }
+
+                    $overlappingTrips = TransportTrip::where('organization_id', $orgId)
+                        ->where('trip_date', $tripDate)
+                        ->where('vehicle_id', $vehicleId)
+                        ->whereIn('status', ['planned', 'in_progress'])
+                        ->exists();
+
+                    if ($overlappingTrips) {
+                        throw new Exception("Vehicle {$vehicleId} already booked for this date.", 409);
+                    }
+
+                    $tripData = $data;
+                    $tripData['organization_id'] = $orgId;
+                    $tripData['vehicle_id'] = $vehicleId;
+                    $tripData['trip_reference'] = ReferenceGenerator::generate('TR', 'transport_trips', 'trip_reference', $orgId);
+                    $tripData['status'] = 'planned';
+                    $tripData['assignment_mode'] = 'auto';
+                    $tripData['trip_group_id'] = $tripGroupId;
+                    $tripData['passenger_count'] = $vehicle->capacity; // Or dynamically distribute passengers? Simple way for now.
+
+                    $trips[] = TransportTrip::create($tripData);
+                }
+
+                return $trips;
+            }
+
+            $vehicleId = $data['vehicle_id'] ?? null;
+            $driverId = $data['driver_employee_id'] ?? null;
             
             if ($vehicleId) {
                 $vehicle = Vehicle::where('organization_id', $orgId)->lockForUpdate()->findOrFail($vehicleId);
@@ -57,6 +106,7 @@ class TransportTripService
             $data['organization_id'] = $orgId;
             $data['trip_reference'] = ReferenceGenerator::generate('TR', 'transport_trips', 'trip_reference', $orgId);
             $data['status'] = 'planned';
+            $data['assignment_mode'] = 'manual';
 
             return TransportTrip::create($data);
         });

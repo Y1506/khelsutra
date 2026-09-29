@@ -1,6 +1,6 @@
 <?php
 // Resolve current active role strictly from authenticated session (never from query parameters)
-$currentRole = $_SESSION['auth']['role_slug'] ?? 'sports_admin';
+$currentRole = $_SESSION['auth']['role']['slug'] ?? 'sports_admin';
 $activePage = $activePage ?? 'dashboard';
 
 // Role-aware navigation definitions for all 7 application roles
@@ -13,15 +13,15 @@ $navMenus = [
         ['key' => 'tournaments', 'label' => 'Tournaments', 'icon' => 'bi-trophy-fill', 'url' => '/tournaments'],
         ['key' => 'training', 'label' => 'Training', 'icon' => 'bi-stopwatch-fill', 'url' => '/attendance/training'],
         ['key' => 'venues', 'label' => 'Venues & Bookings', 'icon' => 'bi-geo-alt-fill', 'url' => '/venues'],
-        ['key' => 'operations_venues', 'label' => 'Venues Admin', 'icon' => 'bi-geo-alt-fill', 'url' => '/operations/venues'],
-        ['key' => 'bookings', 'label' => 'Facility Bookings', 'icon' => 'bi-calendar-plus', 'url' => '/operations/bookings'],
         ['key' => 'maintenance', 'label' => 'Maintenance', 'icon' => 'bi-tools', 'url' => '/operations/maintenance'],
-        ['key' => 'housekeeping', 'label' => 'Housekeeping', 'icon' => 'bi-brush', 'url' => '/operations/housekeeping'],
-        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar2-star', 'url' => '/operations/events'],
-        ['key' => 'school-activities', 'label' => 'School Activities', 'icon' => 'bi-mortarboard', 'url' => '/operations/school-activities'],
+        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar-event', 'url' => '/operations/events'],
         ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bi-truck', 'url' => '/operations/transport'],
         ['key' => 'accommodation', 'label' => 'Accommodation', 'icon' => 'bi-building-fill-add', 'url' => '/operations/accommodation'],
         ['key' => 'inventory', 'label' => 'Inventory', 'icon' => 'bi-box-seam-fill', 'url' => '/inventory'],
+        ['key' => 'equipment', 'label' => 'Equipment', 'icon' => 'bi-tag-fill', 'url' => '/equipment'],
+        ['key' => 'vendors', 'label' => 'Vendors & Suppliers', 'icon' => 'bi-truck', 'url' => '/vendors'],
+        ['key' => 'purchases', 'label' => 'Purchases & Orders', 'icon' => 'bi-cart-check-fill', 'url' => '/purchases'],
+        ['key' => 'finance', 'label' => 'Finance & Accounting', 'icon' => 'bi-wallet-fill', 'url' => '/finance'],
         ['key' => 'users', 'label' => 'Users & RBAC', 'icon' => 'bi-people-fill', 'url' => '/users'],
         ['key' => 'hr-finance', 'label' => 'Staff & HR', 'icon' => 'bi-briefcase-fill', 'url' => '/hr/employees'],
         ['key' => 'leave', 'label' => 'Leave Requests', 'icon' => 'bi-calendar-check', 'url' => '/leave'],
@@ -59,6 +59,7 @@ $navMenus = [
         ['key' => 'matches', 'label' => 'Match Attendance', 'icon' => 'bi-trophy', 'url' => '/attendance/matches'],
         ['key' => 'leave', 'label' => 'Leave Requests', 'icon' => 'bi-calendar-x', 'url' => '/leave'],
         ['key' => 'payroll', 'label' => 'Payroll Operations', 'icon' => 'bi-cash-coin', 'url' => '/payroll'],
+        ['key' => 'finance', 'label' => 'Finance & Accounting', 'icon' => 'bi-wallet-fill', 'url' => '/finance'],
         ['key' => 'salary-structures', 'label' => 'Salary Structures', 'icon' => 'bi-cash-stack', 'url' => '/payroll/salary-structures'],
         ['key' => 'periods', 'label' => 'Payroll Periods', 'icon' => 'bi-calendar-range', 'url' => '/payroll/periods'],
         ['key' => 'reports', 'label' => 'Reports', 'icon' => 'bi-bar-chart-fill', 'url' => '/reports'],
@@ -66,14 +67,10 @@ $navMenus = [
     ],
     'venue_manager' => [
         ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'bi-house-door-fill', 'url' => '/dashboard'],
-        ['key' => 'operations_venues', 'label' => 'Venues Admin', 'icon' => 'bi-geo-alt-fill', 'url' => '/operations/venues'],
-        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar2-star', 'url' => '/operations/events'],
-        ['key' => 'school-activities', 'label' => 'School Activities', 'icon' => 'bi-mortarboard', 'url' => '/operations/school-activities'],
+        ['key' => 'events', 'label' => 'Events', 'icon' => 'bi-calendar-event', 'url' => '/operations/events'],
         ['key' => 'transport', 'label' => 'Transport', 'icon' => 'bi-truck', 'url' => '/operations/transport'],
         ['key' => 'accommodation', 'label' => 'Accommodation', 'icon' => 'bi-building-fill-add', 'url' => '/operations/accommodation'],
-        ['key' => 'bookings', 'label' => 'Facility Bookings', 'icon' => 'bi-calendar-plus', 'url' => '/operations/bookings'],
         ['key' => 'maintenance', 'label' => 'Maintenance', 'icon' => 'bi-tools', 'url' => '/operations/maintenance'],
-        ['key' => 'housekeeping', 'label' => 'Housekeeping', 'icon' => 'bi-brush', 'url' => '/operations/housekeeping'],
         ['key' => 'tournaments', 'label' => 'Tournaments', 'icon' => 'bi-trophy-fill', 'url' => '/tournaments'],
         ['key' => 'reports', 'label' => 'Reports', 'icon' => 'bi-bar-chart-fill', 'url' => '/reports'],
         ['key' => 'settings', 'label' => 'Settings', 'icon' => 'bi-gear-fill', 'url' => '/settings/organization'],
@@ -81,9 +78,9 @@ $navMenus = [
     'inventory_manager' => [
         ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'bi-house-door-fill', 'url' => '/dashboard'],
         ['key' => 'inventory', 'label' => 'Stock Inventory', 'icon' => 'bi-box-seam-fill', 'url' => '/inventory'],
-        ['key' => 'equipment', 'label' => 'Equipment Tracking', 'icon' => 'bi-tag-fill', 'url' => '/inventory#equipment'],
-        ['key' => 'vendors', 'label' => 'Vendors & Suppliers', 'icon' => 'bi-truck', 'url' => '/inventory#vendors'],
-        ['key' => 'purchases', 'label' => 'Purchase Orders', 'icon' => 'bi-cart-check-fill', 'url' => '/inventory#purchases'],
+        ['key' => 'equipment', 'label' => 'Equipment Tracking', 'icon' => 'bi-tag-fill', 'url' => '/equipment'],
+        ['key' => 'vendors', 'label' => 'Vendors & Suppliers', 'icon' => 'bi-truck', 'url' => '/vendors'],
+        ['key' => 'purchases', 'label' => 'Purchases & Orders', 'icon' => 'bi-cart-check-fill', 'url' => '/purchases'],
         ['key' => 'reports', 'label' => 'Reports', 'icon' => 'bi-bar-chart-fill', 'url' => '/reports'],
         ['key' => 'settings', 'label' => 'Settings', 'icon' => 'bi-gear-fill', 'url' => '/settings/organization'],
     ],
@@ -93,6 +90,7 @@ $navMenus = [
         ['key' => 'users', 'label' => 'Platform Users', 'icon' => 'bi-people-fill', 'url' => '/users'],
         ['key' => 'roles', 'label' => 'Roles & RBAC', 'icon' => 'bi-shield-lock-fill', 'url' => '/roles'],
         ['key' => 'sports', 'label' => 'Sports Catalog', 'icon' => 'bi-trophy-fill', 'url' => '/tournaments'],
+        ['key' => 'finance', 'label' => 'Finance & Accounting', 'icon' => 'bi-wallet-fill', 'url' => '/finance'],
         ['key' => 'audit', 'label' => 'Audit Trail', 'icon' => 'bi-journal-check', 'url' => '/audit-logs'],
         ['key' => 'reports', 'label' => 'Global Analytics', 'icon' => 'bi-graph-up', 'url' => '/reports'],
         ['key' => 'settings', 'label' => 'Global Settings', 'icon' => 'bi-sliders', 'url' => '/settings/organization'],

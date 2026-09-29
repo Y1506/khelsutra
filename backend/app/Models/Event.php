@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends Model
 {
+    use \App\Traits\HasSports;
     use BelongsToOrganization, SoftDeletes;
 
     protected $table = 'events';

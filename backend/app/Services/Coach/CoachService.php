@@ -80,7 +80,7 @@ class CoachService extends BaseService
             LEFT JOIN team_coaches tc ON cp.id = tc.coach_id
             LEFT JOIN teams t ON tc.team_id = t.id AND t.deleted_at IS NULL
             WHERE {$whereClause}
-            GROUP BY cp.id, e.id
+            GROUP BY cp.id, e.id, d.name
             ORDER BY cp.id DESC
             LIMIT :limit OFFSET :offset
         ";

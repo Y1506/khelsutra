@@ -33,7 +33,7 @@ ob_start();
         </a>
         <a href="/athletes/create" class="ks-btn ks-btn-primary" id="btnAddAthlete">
             <i class="bi bi-plus-lg"></i>
-            <span>+ Add Athlete</span>
+            <span>Add Athlete</span>
         </a>
     </div>
 </div>
@@ -96,7 +96,7 @@ ob_start();
                             <div class="small mt-1 mb-3">No registered athletes matched the filter criteria in this academy.</div>
                             <a href="/athletes/create" class="ks-btn ks-btn-primary d-inline-flex">
                                 <i class="bi bi-plus-lg"></i>
-                                <span>+ Add Athlete</span>
+                                <span>Add Athlete</span>
                             </a>
                         </td>
                     </tr>

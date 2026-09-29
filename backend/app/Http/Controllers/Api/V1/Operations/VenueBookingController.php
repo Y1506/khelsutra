@@ -98,7 +98,8 @@ class VenueBookingController
     {
         try {
             $userId = $requestData['user_id'] ?? 1; // mocked
-            $booking = $this->bookingService->cancelBooking($orgId, $id, $userId, $requestData['reason'] ?? '');
+            $reason = $requestData['cancellation_reason'] ?? $requestData['reason'] ?? '';
+            $booking = $this->bookingService->cancelBooking($orgId, $id, $userId, $reason);
             return ApiResponse::success($booking->toArray(), 'Booking cancelled');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return ApiResponse::error('Booking not found', null, 404);

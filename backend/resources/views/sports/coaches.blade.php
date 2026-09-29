@@ -30,7 +30,7 @@ ob_start();
     <div class="ks-header-actions">
         <a href="/coaches/create" class="ks-btn ks-btn-primary">
             <i class="bi bi-plus-lg"></i>
-            <span>+ Add Coach</span>
+            <span>Add Coach</span>
         </a>
     </div>
 </div>
@@ -159,7 +159,7 @@ ob_start();
                             </td>
                             <td>
                                 <?php $cStatus = $coach['coach_status'] ?? 'active'; ?>
-                                <form action="/coaches/<?= (int)$coach['coach_profile_id'] ?>/status" method="POST" class="d-inline m-0 p-0">
+                                <form action="/coaches/<?= (int)$coach['coach_profile_id'] ?>/status" method="POST" style="display: contents;" class="d-inline m-0 p-0">
                                     <input type="hidden" name="status" value="<?= $cStatus === 'active' ? 'inactive' : 'active' ?>">
                                     <button type="submit" class="ks-badge <?= $cStatus === 'active' ? 'ks-badge-confirmed' : 'ks-badge-scheduled' ?>" style="cursor: pointer; border: 1px solid <?= $cStatus === 'active' ? '#BBF7D0' : '#BFDBFE' ?>; background-color: <?= $cStatus === 'active' ? '#DCFCE7' : '#DBEAFE' ?>; color: <?= $cStatus === 'active' ? '#166534' : '#1E40AF' ?>; padding: 0 10px; font-family: inherit;" title="Click to toggle status to <?= $cStatus === 'active' ? 'Inactive' : 'Active' ?>">
                                         <?= htmlspecialchars(ucfirst($cStatus), ENT_QUOTES, 'UTF-8') ?>
@@ -174,7 +174,7 @@ ob_start();
                                     <a href="/coaches/<?= (int)$coach['coach_profile_id'] ?>/edit" class="btn btn-outline-secondary" title="Edit Coach">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="/coaches/<?= (int)$coach['coach_profile_id'] ?>/delete" method="POST" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this coach profile? This action marks the record as deleted.');">
+                                    <form action="/coaches/<?= (int)$coach['coach_profile_id'] ?>/delete" method="POST" style="display: contents;" class="d-inline m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this coach profile? This action marks the record as deleted.');">
                                         <button type="submit" class="btn btn-outline-danger" title="Delete Coach" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0;">
                                             <i class="bi bi-trash"></i>
                                         </button>

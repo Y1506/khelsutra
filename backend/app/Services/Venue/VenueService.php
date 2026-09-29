@@ -166,20 +166,51 @@ class VenueService extends BaseService
 
             $venueId = (int)$this->pdo->lastInsertId();
 
-            // Optional initial facility
+            // Optional initial facilities (handles both string and array for backward compatibility)
             if (!empty($data['facility_name'])) {
+                $fNames = (array)$data['facility_name'];
+                $fTypes = (array)($data['facility_type'] ?? []);
+                $fCaps  = (array)($data['facility_capacity'] ?? []);
+
                 $facSql = "
                     INSERT INTO venue_facilities (organization_id, venue_id, name, facility_type, capacity, status, created_at, updated_at)
                     VALUES (:org_id, :v_id, :name, :type, :cap, 'active', NOW(), NOW())
                 ";
                 $fStmt = $this->pdo->prepare($facSql);
-                $fStmt->execute([
-                    ':org_id' => $organizationId,
-                    ':v_id' => $venueId,
-                    ':name' => trim($data['facility_name']),
-                    ':type' => $data['facility_type'] ?? 'Main Field',
-                    ':cap' => !empty($data['facility_capacity']) ? (int)$data['facility_capacity'] : null
-                ]);
+
+                foreach ($fNames as $index => $name) {
+                    $name = trim($name);
+                    if (empty($name)) continue;
+
+                    $type = trim($fTypes[$index] ?? 'Main Field');
+                    $cap = !empty($fCaps[$index]) ? (int)$fCaps[$index] : null;
+
+                    $fStmt->execute([
+                        ':org_id' => $organizationId,
+                        ':v_id' => $venueId,
+                        ':name' => $name,
+                        ':type' => $type,
+                        ':cap' => $cap
+                    ]);
+                    
+                    $facilityId = (int)$this->pdo->lastInsertId();
+                    
+                    // Add sports for this facility
+                    $sportsKey = "facility_sports_{$index}";
+                    if (isset($data[$sportsKey]) && is_array($data[$sportsKey])) {
+                        $sportSql = "INSERT INTO facility_sports (organization_id, facility_id, sport_id, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
+                        $spStmt = $this->pdo->prepare($sportSql);
+                        foreach ($data[$sportsKey] as $spId) {
+                            $spId = (int)$spId;
+                            if ($spId > 0) {
+                                // Ignore duplicate key errors if a sport is selected twice
+                                try {
+                                    $spStmt->execute([$organizationId, $facilityId, $spId]);
+                                } catch (\Exception $e) {}
+                            }
+                        }
+                    }
+                }
             }
 
             $this->pdo->commit();
@@ -305,6 +336,49 @@ class VenueService extends BaseService
         return ['id' => $facId, 'name' => $data['name'] ?? ''];
     }
 
+    public function createBookingsBatch(int $organizationId, array $data, ?int $performedBy = null): array
+    {
+        if (!$this->pdo) return [];
+
+        $facilityIds = $data['facility_id'] ?? [];
+        $bookingDates = $data['booking_date'] ?? [];
+        $startTimes = $data['start_time'] ?? [];
+        $endTimes = $data['end_time'] ?? [];
+        $notes = $data['notes'] ?? [];
+
+        if (!is_array($facilityIds)) {
+            $facilityIds = [$facilityIds];
+            $bookingDates = [$bookingDates];
+            $startTimes = [$startTimes];
+            $endTimes = [$endTimes];
+            $notes = [$notes];
+        }
+
+        $createdBookings = [];
+        $this->pdo->beginTransaction();
+        try {
+            foreach ($facilityIds as $index => $facId) {
+                if (empty($facId)) continue;
+                $slotData = $data;
+                $slotData['facility_id'] = $facId;
+                $slotData['booking_date'] = is_array($bookingDates) ? ($bookingDates[$index] ?? date('Y-m-d')) : $bookingDates;
+                $slotData['start_time'] = is_array($startTimes) ? ($startTimes[$index] ?? '08:00:00') : $startTimes;
+                $slotData['end_time'] = is_array($endTimes) ? ($endTimes[$index] ?? '10:00:00') : $endTimes;
+                $slotData['notes'] = is_array($notes) ? ($notes[$index] ?? null) : $notes;
+                
+                // createBooking does not have its own beginTransaction, so it's safe to call here.
+                // However, createBooking does an audit log which might assume autocommit if not careful, 
+                // but since it's just an INSERT, it's fine within this transaction.
+                $createdBookings[] = $this->createBooking($organizationId, $slotData, $performedBy);
+            }
+            $this->pdo->commit();
+            return $createdBookings;
+        } catch (\Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
     public function createBooking(int $organizationId, array $data, ?int $performedBy = null): array
     {
         if (!$this->pdo) return [];
@@ -352,6 +426,13 @@ class VenueService extends BaseService
 
         $ref = $data['booking_reference'] ?? ('BKG-' . date('Y') . '-' . strtoupper(substr(uniqid(), -4)));
 
+        // Auto-approve only if the user has the booking management permission.
+        // Otherwise, the booking starts as pending and must be reviewed.
+        $sessionPermissions = $_SESSION['auth']['permissions'] ?? [];
+        $canAutoApprove = in_array('venue.booking.manage', $sessionPermissions, true);
+        $bookingStatus = $canAutoApprove ? 'approved' : 'pending';
+        $approvedBy = $canAutoApprove ? $performedBy : null;
+
         $sql = "
             INSERT INTO venue_bookings (
                 organization_id, venue_id, facility_id, booking_reference,
@@ -360,7 +441,7 @@ class VenueService extends BaseService
             ) VALUES (
                 :org_id, :v_id, :fac_id, :ref,
                 :user_id, :b_type, :purpose, :team_id,
-                :b_date, :stime, :etime, 'approved', :appr_by, NOW(), :notes, NOW(), NOW()
+                :b_date, :stime, :etime, :status, :appr_by, :appr_at, :notes, NOW(), NOW()
             )
         ";
 
@@ -377,7 +458,9 @@ class VenueService extends BaseService
             ':b_date' => $bookingDate,
             ':stime' => $startTime,
             ':etime' => $endTime,
-            ':appr_by' => $performedBy,
+            ':status' => $bookingStatus,
+            ':appr_by' => $approvedBy,
+            ':appr_at' => $canAutoApprove ? date('Y-m-d H:i:s') : null,
             ':notes' => $data['notes'] ?? null,
         ]);
 

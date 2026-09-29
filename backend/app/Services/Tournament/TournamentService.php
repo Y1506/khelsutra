@@ -63,7 +63,7 @@ class TournamentService extends BaseService
             LEFT JOIN tournament_teams tt ON t.id = tt.tournament_id
             LEFT JOIN fixtures f ON t.id = f.tournament_id AND f.deleted_at IS NULL
             WHERE {$whereClause}
-            GROUP BY t.id
+            GROUP BY t.id, s.name, tl.name, tf.name
             ORDER BY t.start_date DESC
             LIMIT :limit OFFSET :offset
         ";

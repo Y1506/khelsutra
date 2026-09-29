@@ -42,4 +42,17 @@ class AccommodationController
             return ApiResponse::error($e->getMessage(), null, 400);
         }
     }
+
+    public function getRooms(int $orgId, int $id): array
+    {
+        try {
+            $result = $this->service->listRooms($orgId, $id);
+            return \App\Helpers\ApiResponse::success($result);
+        } catch (\Exception $e) {
+            $code = $e->getCode() ?: 500;
+            if ($code < 100 || $code > 599) $code = 500;
+            return \App\Helpers\ApiResponse::error($e->getMessage(), null, $code);
+        }
+    }
 }
+
